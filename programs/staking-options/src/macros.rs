@@ -17,18 +17,19 @@ macro_rules! check_expired {
 }
 
 // This check verifies that nobody made a fake SO State at a different address.
+// Use only when needed since PDA computation is expensive.
 macro_rules! check_state {
     ($ctx:expr) => {
         let (so_state, _so_state_bump) = Pubkey::find_program_address(
             &[
                 SO_CONFIG_SEED,
-                &$ctx.state.period_num.to_be_bytes(),
-                &$ctx.state.project_token_mint.key().to_bytes(),
+                &$ctx.accounts.state.period_num.to_be_bytes(),
+                &$ctx.accounts.state.project_token_mint.key().to_bytes(),
             ],
-            &Pubkey::new(THIS_PROGRAM),
+            $ctx.program_id,
         );
 
-        assert_keys_eq!($ctx.state.key(), so_state, InvalidState);
+        assert_keys_eq!($ctx.accounts.state.key(), so_state, InvalidState);
     };
 }
 
@@ -38,13 +39,13 @@ macro_rules! check_vault {
         let (expected_vault, _expected_vault_bump) = Pubkey::find_program_address(
             &[
                 SO_VAULT_SEED,
-                &$ctx.state.period_num.to_be_bytes(),
-                &$ctx.state.project_token_mint.key().to_bytes(),
+                &$ctx.accounts.state.period_num.to_be_bytes(),
+                &$ctx.accounts.state.project_token_mint.key().to_bytes(),
             ],
-            &Pubkey::new(THIS_PROGRAM),
+            $ctx.program_id,
         );
 
-        assert_keys_eq!($ctx.project_token_vault.key(), expected_vault, InvalidVault);
+        assert_keys_eq!($ctx.accounts.project_token_vault.key(), expected_vault, InvalidVault);
     };
 }
 

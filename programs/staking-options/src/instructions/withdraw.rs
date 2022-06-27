@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token;
 use anchor_spl::token::{Token, TokenAccount};
 use vipers::prelude::*;
 
@@ -9,15 +8,27 @@ pub fn withdraw(
     ctx: Context<Withdraw>,
 ) -> Result<()> {
     // Send project tokens from the vault.
-    let cpi_ctx = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
-        token::Transfer {
-            from: ctx.accounts.project_token_account.to_account_info(),
-            to: ctx.accounts.project_token_vault.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-        },
+    let (_so_vault, so_vault_bump) = Pubkey::find_program_address(
+        gen_vault_seeds!(ctx),
+        ctx.program_id,
     );
-    token::transfer(cpi_ctx, ctx.accounts.project_token_vault.amount)?;
+    anchor_spl::token::transfer(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            anchor_spl::token::Transfer {
+                from: ctx.accounts.project_token_vault.to_account_info(),
+                to: ctx.accounts.project_token_account.to_account_info(),
+                authority: ctx.accounts.project_token_vault.to_account_info(),
+            },
+            &[&[
+                SO_VAULT_SEED,
+                &ctx.accounts.state.period_num.to_be_bytes(),
+                &ctx.accounts.state.project_token_mint.key().to_bytes(),
+                &[so_vault_bump],
+            ]],
+        ),
+        ctx.accounts.project_token_vault.amount,
+    )?;
 
     Ok(())
 }
@@ -48,10 +59,10 @@ impl <'info> Withdraw<'info>  {
     pub fn validate_accounts(&self) -> Result<()> {
         // Verify the token types match so you cannot withdraw from a different
         // vault.
-        check_vault!(self);
+        //check_vault!(self);
 
         // Verify the state is at the right address
-        check_state!(self);
+        //check_state!(self);
 
         // Verify the authority to init strike against the state authority
         assert_keys_eq!(self.authority, self.state.authority);

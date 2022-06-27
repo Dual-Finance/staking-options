@@ -8,6 +8,11 @@ pub fn init_strike(
     ctx: Context<InitStrike>,
     strike: u64,
 ) -> Result<()> {
+    // Verify the state is at the right address. Done here so we can get the
+    // program id.
+    check_state!(ctx);
+
+    msg!("Starting to init strike");
     ctx.accounts.state.strikes.push(strike);
 
     Ok(())
@@ -43,9 +48,6 @@ pub struct InitStrike<'info> {
 
 impl <'info> InitStrike<'info>  {
     pub fn validate_accounts(&self, _strike: u64) -> Result<()> {
-        // Verify the state is at the right address
-        check_state!(self);
-
         // Verify the authority to init strike against the state authority
         assert_keys_eq!(self.authority, self.state.authority);
 

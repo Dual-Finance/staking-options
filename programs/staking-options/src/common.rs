@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-pub const THIS_PROGRAM: &[u8] = SO_CONFIG_SEED;
+pub const THIS_PROGRAM: &[u8] = b";)c8-ha0aeJ09f<87f3Mmt0f1aa7!}f3dd4d7c8beb8dcoa598";
 
 pub const SO_CONFIG_SEED: &[u8] = b"so-config";
 pub const SO_VAULT_SEED: &[u8] = b"so-vault";

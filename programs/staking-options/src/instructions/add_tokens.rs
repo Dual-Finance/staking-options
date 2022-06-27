@@ -5,6 +5,14 @@ use vipers::prelude::*;
 use crate::*;
 
 pub fn add_tokens(ctx: Context<AddTokens>, num_tokens_to_add: u64) -> Result<()> {
+    // Verify the SO state is correct.
+    check_state!(ctx);
+
+    // Verify that the state that is getting credited with tokens has the
+    // same vault so that a user cannot maliciously get the vaults out of
+    // sync.
+    check_vault!(ctx);
+
     // Move tokens from the depositor to the vault.
     let cpi_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -62,15 +70,7 @@ impl<'info> AddTokens<'info> {
         // Do not allow adding tokens to an SO that is expired already.
         check_not_expired!(self.state.subscription_period_end);
 
-        // Verify the SO state is correct.
-        check_state!(self);
-
         // Adding tokens does not require an authority check.
-
-        // Verify that the state that is getting credited with tokens has the
-        // same vault so that a user cannot maliciously get the vaults out of
-        // sync.
-        check_vault!(self);
 
         Ok(())
     }

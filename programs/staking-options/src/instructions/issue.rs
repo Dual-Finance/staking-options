@@ -3,12 +3,18 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 pub use crate::*;
 
 pub fn issue(ctx: Context<Issue>, amount: u64) -> Result<()> {
+    // Verify the state is at the right address
+    check_state!(ctx);
+
+    // TODO: Verify the SO mint is at the right address
+    // check_option_mint!(ctx);
+
     // Mint tokens for the user
     let cpi_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
         anchor_spl::token::MintTo {
-            mint: ctx.accounts.so_mint.to_account_info(),
-            to: ctx.accounts.recipient_so_account.to_account_info(),
+            mint: ctx.accounts.option_mint.to_account_info(),
+            to: ctx.accounts.user_so_account.to_account_info(),
             authority: ctx.accounts.authority.to_account_info().clone(),
         },
     );
@@ -32,22 +38,17 @@ pub struct Issue<'info> {
     pub state: Box<Account<'info, State>>,
 
     #[account(mut)]
-    pub so_mint: Account<'info, Mint>,
+    pub option_mint: Account<'info, Mint>,
 
     /// Where the options will be sent.
     #[account(mut)]
-    pub recipient_so_account: Box<Account<'info, TokenAccount>>,
+    pub user_so_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
 
 impl<'info> Issue<'info> {
     pub fn validate_accounts(&self, amount: u64) -> Result<()> {
-        // Verify the state is at the right address
-        check_state!(self);
-
-        // TODO: Verify the SO mint is at the right address
-
         // Verify the authority signer matches state authority
         assert_keys_eq!(self.authority, self.state.authority);
 

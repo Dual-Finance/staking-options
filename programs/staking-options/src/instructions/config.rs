@@ -83,7 +83,8 @@ pub struct Config<'info> {
     #[account(mut)]
     pub project_token_account: Box<Account<'info, TokenAccount>>,
 
-    // Saved for later. Not used.
+    /// Saved for later. Not used. TokenAccount instead of AccountInfo in order
+    /// to get the anchor type checking.
     pub usdc_account: Box<Account<'info, TokenAccount>>,
 
     /// Mint of project tokens.

@@ -12,7 +12,7 @@ pub use crate::common::*;
 pub use crate::errors::ErrorCode;
 pub use crate::instructions::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("4yx1NJ4Vqf2zT1oVLk4SySBhhDJXmXFt88ncm4gPxtL7");
 
 #[program]
 pub mod staking_options {
@@ -20,7 +20,7 @@ pub mod staking_options {
 
     #[access_control(ctx.accounts.validate_accounts(num_tokens_to_add))]
     pub fn add_tokens(ctx: Context<AddTokens>, num_tokens_to_add: u64) -> Result<()> {
-        Ok(())
+        add_tokens::add_tokens(ctx, num_tokens_to_add)
     }
 
     #[access_control(ctx.accounts.validate_accounts(period_num, option_expiration, subscription_period_end, num_tokens_in_period))]
@@ -31,31 +31,37 @@ pub mod staking_options {
         subscription_period_end: u64,
         num_tokens_in_period: u64,
     ) -> Result<()> {
-        Ok(())
+        config::config(
+            ctx,
+            period_num,
+            option_expiration,
+            subscription_period_end,
+            num_tokens_in_period,
+        )
     }
 
-    #[access_control(ctx.accounts.validate_accounts(amount))]
-    pub fn exercise(ctx: Context<Exercise>, amount: u64) -> Result<()> {
-        Ok(())
+    #[access_control(ctx.accounts.validate_accounts(amount, strike))]
+    pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> {
+        exercise::exercise(ctx, amount, strike)
     }
 
     #[access_control(ctx.accounts.validate_accounts(strike))]
     pub fn init_strike(ctx: Context<InitStrike>, strike: u64) -> Result<()> {
-        Ok(())
+        init_strike::init_strike(ctx, strike)
     }
 
     #[access_control(ctx.accounts.validate_accounts(amount))]
     pub fn issue(ctx: Context<Issue>, amount: u64) -> Result<()> {
-        Ok(())
+        issue::issue(ctx, amount)
     }
 
     #[access_control(ctx.accounts.validate_accounts())]
     pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
-        Ok(())
+        rollover::rollover(ctx)
     }
 
     #[access_control(ctx.accounts.validate_accounts())]
     pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
-        Ok(())
+        withdraw::withdraw(ctx)
     }
 }
