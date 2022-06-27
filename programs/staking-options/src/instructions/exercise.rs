@@ -33,10 +33,8 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
 
     // Transfer the project tokens
     msg!("Transferring tokens");
-    let (_so_vault, so_vault_bump) = Pubkey::find_program_address(
-        gen_vault_seeds!(ctx),
-        ctx.program_id,
-    );
+    let (_so_vault, so_vault_bump) =
+        Pubkey::find_program_address(gen_vault_seeds!(ctx), ctx.program_id);
     anchor_spl::token::transfer(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),

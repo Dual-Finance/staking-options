@@ -4,10 +4,7 @@ use vipers::prelude::*;
 
 pub use crate::common::*;
 
-pub fn init_strike(
-    ctx: Context<InitStrike>,
-    strike: u64,
-) -> Result<()> {
+pub fn init_strike(ctx: Context<InitStrike>, strike: u64) -> Result<()> {
     // Verify the state is at the right address. Done here so we can get the
     // program id.
     check_state!(ctx);
@@ -40,13 +37,12 @@ pub struct InitStrike<'info> {
 
     // TODO: Consider a data account at PDA(mint address) for a reverse lookup
     // so if you have a token, you can remember the strike and project mint.
-    
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl <'info> InitStrike<'info>  {
+impl<'info> InitStrike<'info> {
     pub fn validate_accounts(&self, _strike: u64) -> Result<()> {
         // Verify the authority to init strike against the state authority
         assert_keys_eq!(self.authority, self.state.authority);

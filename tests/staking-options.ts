@@ -5,7 +5,7 @@ import {
 import assert from 'assert';
 import { PublicKey } from '@solana/web3.js';
 import { Provider, Program } from '@project-serum/anchor';
-import { StakingOptions } from "../target/types/staking_options";
+import { StakingOptions } from '../target/types/staking_options';
 import {
   getTokenAccount,
   findAssociatedTokenAddress,
@@ -20,15 +20,15 @@ const anchor = require('@project-serum/anchor');
 const web3 = require('@solana/web3.js');
 const process = require('process');
 
-describe("staking-options", () => {
+describe('staking-options', () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.Provider.env());
   const provider: Provider = anchor.Provider.env();
   const program = anchor.workspace.StakingOptions as Program<StakingOptions>;
 
-  const SO_CONFIG_SEED = "so-config";
-  const SO_VAULT_SEED = "so-vault";
-  const SO_MINT_SEED = "so-mint";
+  const SO_CONFIG_SEED = 'so-config';
+  const SO_VAULT_SEED = 'so-vault';
+  const SO_MINT_SEED = 'so-mint';
 
   let projectTokenMint: PublicKey;
   let projectTokenAccount: PublicKey;
@@ -44,12 +44,12 @@ describe("staking-options", () => {
 
   let optionExpiration: number;
   let subscriptionPeriodEnd: number;
-  let periodNum: number = 0;
-  let numTokensInPeriod: number = 1_000_000_000;
-  let STRIKE: number = 1_000;
-  let OPTIONS_AMOUNT: number = 1_000;
+  const periodNum: number = 0;
+  const numTokensInPeriod: number = 1_000_000_000;
+  const STRIKE: number = 1_000;
+  const OPTIONS_AMOUNT: number = 1_000;
 
-  async function configureSO () {
+  async function configureSO() {
     console.log('Configuring SO');
 
     optionExpiration = Math.floor(Date.now() / 1000 + 100);
@@ -189,7 +189,7 @@ describe("staking-options", () => {
       {
         accounts: {
           authority: provider.wallet.publicKey,
-          state: state,
+          state,
           projectTokenVault,
           projectTokenAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -263,44 +263,43 @@ describe("staking-options", () => {
     );
   }
 
-  it("Config Success", async () => {
+  it('Config Success', async () => {
     await configureSO();
   });
 
-  it("InitStrike Success", async () => {
+  it('InitStrike Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
   });
 
-  it("Issue Success", async () => {
+  it('Issue Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
     await issue(OPTIONS_AMOUNT);
   });
 
-  it("AddTokens Success", async () => {
+  it('AddTokens Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
     await addTokens();
   });
 
-  it("Exercise Success", async () => {
+  it('Exercise Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
     await issue(OPTIONS_AMOUNT);
     await exercise(OPTIONS_AMOUNT);
   });
 
-  it("Withdraw Success", async () => {
+  it('Withdraw Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
     await issue(OPTIONS_AMOUNT);
     await exercise(OPTIONS_AMOUNT);
     try {
-    await withdraw();
+      await withdraw();
     } catch (err) {
       console.log(err);
     }
   });
-
 });

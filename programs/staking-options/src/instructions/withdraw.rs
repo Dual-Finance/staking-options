@@ -4,14 +4,10 @@ use vipers::prelude::*;
 
 pub use crate::common::*;
 
-pub fn withdraw(
-    ctx: Context<Withdraw>,
-) -> Result<()> {
+pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
     // Send project tokens from the vault.
-    let (_so_vault, so_vault_bump) = Pubkey::find_program_address(
-        gen_vault_seeds!(ctx),
-        ctx.program_id,
-    );
+    let (_so_vault, so_vault_bump) =
+        Pubkey::find_program_address(gen_vault_seeds!(ctx), ctx.program_id);
     anchor_spl::token::transfer(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -55,7 +51,7 @@ pub struct Withdraw<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl <'info> Withdraw<'info>  {
+impl<'info> Withdraw<'info> {
     pub fn validate_accounts(&self) -> Result<()> {
         // Verify the token types match so you cannot withdraw from a different
         // vault.

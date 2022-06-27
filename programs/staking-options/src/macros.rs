@@ -45,7 +45,11 @@ macro_rules! check_vault {
             $ctx.program_id,
         );
 
-        assert_keys_eq!($ctx.accounts.project_token_vault.key(), expected_vault, InvalidVault);
+        assert_keys_eq!(
+            $ctx.accounts.project_token_vault.key(),
+            expected_vault,
+            InvalidVault
+        );
     };
 }
 

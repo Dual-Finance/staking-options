@@ -1,5 +1,5 @@
-use anchor_spl::token::{Mint, Token, TokenAccount};
 use anchor_spl::token;
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 pub use crate::*;
 
@@ -104,7 +104,10 @@ impl<'info> Config<'info> {
         _num_tokens_in_period: u64,
     ) -> Result<()> {
         // Verify the type of token matches input
-        assert_keys_eq!(self.project_token_mint, self.project_token_account.mint.key());
+        assert_keys_eq!(
+            self.project_token_mint,
+            self.project_token_account.mint.key()
+        );
 
         // Make sure it is not already expired.
         check_not_expired!(option_expiration);
@@ -113,7 +116,7 @@ impl<'info> Config<'info> {
         // Do not need to verify the type of USDC account since if it is
         // invalid, then the SO is worthless but no harm is done to the
         // project.
-        
+
         Ok(())
     }
 }

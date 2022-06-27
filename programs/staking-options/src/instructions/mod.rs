@@ -7,9 +7,9 @@ pub mod rollover;
 pub mod withdraw;
 
 pub use add_tokens::*;
+pub use add_tokens::*;
 pub use config::*;
 pub use exercise::*;
-pub use add_tokens::*;
 pub use init_strike::*;
 pub use issue::*;
 pub use rollover::*;
