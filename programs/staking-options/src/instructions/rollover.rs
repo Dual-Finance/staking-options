@@ -32,9 +32,6 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
         .options_available
         .checked_add(ctx.accounts.old_state.options_available));
 
-    // Update the old state tokens available
-    ctx.accounts.old_state.options_available = 0;
-
     // Move the unallocated tokens
     let (_old_so_vault, old_so_vault_bump) = Pubkey::find_program_address(
         &[
@@ -59,12 +56,18 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
                 &[old_so_vault_bump],
             ]],
         ),
-        ctx.accounts.old_project_token_vault.amount,
+        ctx.accounts.old_state.options_available,
     )?;
+
+    // Update the old state tokens available
+    ctx.accounts.old_state.options_available = 0;
 
     Ok(())
 }
 
+// This is a function that allows rolling over the unused tokens from one period
+// to another. This is different from a withdraw and add tokens since this can
+// move tokens between the subscription period end and the option expiration.
 #[derive(Accounts)]
 #[instruction()]
 pub struct Rollover<'info> {
