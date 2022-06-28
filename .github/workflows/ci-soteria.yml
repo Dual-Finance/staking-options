@@ -51,7 +51,7 @@ jobs:
           echo "$PWD/soteria-linux-develop/bin" >> $GITHUB_PATH
         shell: bash
 
-      - name: Run Soteria for DIP
+      - name: Run Soteria
         run: |
           cd programs/staking-options/ && soteria -analyzeAll . 2>&1 | tee audit.txt
           if grep -q "No vulnerabilities detected" audit.txt; then
