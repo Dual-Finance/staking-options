@@ -1,14 +1,11 @@
 import {
   TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import assert from 'assert';
 import { PublicKey } from '@solana/web3.js';
 import { Provider, Program } from '@project-serum/anchor';
 import { StakingOptions } from '../target/types/staking_options';
 import {
-  getTokenAccount,
-  findAssociatedTokenAddress,
   createMint,
   createTokenAccount,
   mintToAccount,
@@ -17,8 +14,6 @@ import {
 } from './utils/index';
 
 const anchor = require('@project-serum/anchor');
-const web3 = require('@solana/web3.js');
-const process = require('process');
 
 describe('staking-options', () => {
   // Configure the client to use the local cluster.
@@ -216,7 +211,7 @@ describe('staking-options', () => {
     feeUsdcAccount = await createTokenAccount(
       provider,
       usdcMint,
-      provider.wallet.publicKey,
+      new PublicKey("A9YWU67LStgTAYJetbXND2AWqEcvk7FqYJM9nF3VmVpv"),
     );
     userProjectTokenAccount = await createTokenAccount(
       provider,
@@ -296,10 +291,83 @@ describe('staking-options', () => {
     await initStrike(STRIKE);
     await issue(OPTIONS_AMOUNT);
     await exercise(OPTIONS_AMOUNT);
-    try {
-      await withdraw();
-    } catch (err) {
-      console.log(err);
-    }
+    await withdraw();
   });
+
+  it('Rollover Success', async () => {
+    await configureSO();
+
+    // Rollover again
+    await mintToAccount(
+      provider,
+      projectTokenMint,
+      projectTokenAccount,
+      numTokensInPeriod,
+      provider.wallet.publicKey,
+    );
+    const newPeriodNum = 1;
+
+    const [newState, _stateBump] = (
+      await anchor.web3.PublicKey.findProgramAddress(
+        [
+          Buffer.from(anchor.utils.bytes.utf8.encode(SO_CONFIG_SEED)),
+          toBeBytes(newPeriodNum),
+          projectTokenMint.toBuffer(),
+        ],
+        program.programId,
+      ));
+
+    const [newProjectTokenVault, _projectTokenVaultBump] = (
+      await anchor.web3.PublicKey.findProgramAddress(
+        [
+          Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
+          toBeBytes(newPeriodNum),
+          projectTokenMint.toBuffer(),
+        ],
+        program.programId,
+      ));
+
+    // Wait for the old one to expire.
+    await new Promise((r) => setTimeout(r, 100000));
+
+    optionExpiration = Math.floor(Date.now() / 1000 + 100);
+    subscriptionPeriodEnd = optionExpiration;
+
+    console.log("Config again");
+    await program.rpc.config(
+      new anchor.BN(newPeriodNum),
+      new anchor.BN(optionExpiration),
+      new anchor.BN(subscriptionPeriodEnd),
+      new anchor.BN(numTokensInPeriod),
+      {
+        accounts: {
+          authority: provider.wallet.publicKey,
+          soAuthority: provider.wallet.publicKey,
+          state: newState,
+          projectTokenVault: newProjectTokenVault,
+          projectTokenAccount,
+          usdcAccount,
+          projectTokenMint,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        },
+      },
+    );
+
+    console.log("Rolling over");
+    await program.rpc.rollover(
+      {
+        accounts: {
+          authority: provider.wallet.publicKey,
+          oldState: state,
+          newState: newState,
+          oldProjectTokenVault: projectTokenVault,
+          newProjectTokenVault: newProjectTokenVault,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+      },
+    );
+  });
+
 });

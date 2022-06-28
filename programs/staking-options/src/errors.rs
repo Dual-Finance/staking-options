@@ -1,4 +1,3 @@
-
 use anchor_lang::prelude::*;
 
 #[error_code]
@@ -7,6 +6,8 @@ pub enum ErrorCode {
     WrongMint,
     #[msg("Expired")]
     Expired,
+    #[msg("NotYetExpired")]
+    NotYetExpired,
     #[msg("State did not match")]
     InvalidState,
     #[msg("Vault did not match")]

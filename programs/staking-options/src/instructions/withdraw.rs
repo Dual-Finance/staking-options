@@ -5,6 +5,13 @@ use vipers::prelude::*;
 pub use crate::common::*;
 
 pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
+    // Verify the token types match so you cannot withdraw from a different
+    // vault.
+    check_vault!(ctx);
+
+    // Verify the state is at the right address
+    check_state!(ctx);
+
     // Send project tokens from the vault.
     let (_so_vault, so_vault_bump) =
         Pubkey::find_program_address(gen_vault_seeds!(ctx), ctx.program_id);
@@ -35,7 +42,7 @@ pub struct Withdraw<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    // State holding all the data for the stake that the staker wants to do.
+    /// State holding all the data for the stake that the staker wants to do.
     #[account(mut, close=authority)]
     pub state: Box<Account<'info, State>>,
 
@@ -53,13 +60,6 @@ pub struct Withdraw<'info> {
 
 impl<'info> Withdraw<'info> {
     pub fn validate_accounts(&self) -> Result<()> {
-        // Verify the token types match so you cannot withdraw from a different
-        // vault.
-        //check_vault!(self);
-
-        // Verify the state is at the right address
-        //check_state!(self);
-
         // Verify the authority to init strike against the state authority
         assert_keys_eq!(self.authority, self.state.authority);
 

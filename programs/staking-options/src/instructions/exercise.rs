@@ -3,6 +3,12 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 pub use crate::*;
 
 pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> {
+    // Verify the state is at the right PDA
+    check_state!(ctx);
+
+    // Verify the vault is correct.
+    check_vault!(ctx);
+
     // Take the option tokens and burn
     let burn_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -15,9 +21,11 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
     anchor_spl::token::burn(burn_ctx, amount)?;
 
     // Take the USDC payment
-    msg!("Taking payment");
     let payment: u64 =
         unwrap_int!((unwrap_int!(amount.checked_mul(strike))).checked_div(NUM_ATOMS_PER_USDC));
+
+    // 3.5% fee.
+    let fee: u64 = unwrap_int!(unwrap_int!(payment.checked_mul(35)).checked_div(1_000));
     anchor_spl::token::transfer(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
@@ -27,12 +35,21 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
                 authority: ctx.accounts.authority.to_account_info().clone(),
             },
         ),
-        payment,
+        unwrap_int!(payment.checked_sub(fee)),
     )?;
-    // TODO: Take the fee
+    anchor_spl::token::transfer(
+        CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            anchor_spl::token::Transfer {
+                from: ctx.accounts.user_usdc_account.to_account_info(),
+                to: ctx.accounts.fee_usdc_account.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info().clone(),
+            },
+        ),
+        fee,
+    )?;
 
     // Transfer the project tokens
-    msg!("Transferring tokens");
     let (_so_vault, so_vault_bump) =
         Pubkey::find_program_address(gen_vault_seeds!(ctx), ctx.program_id);
     anchor_spl::token::transfer(
@@ -59,7 +76,6 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
 #[derive(Accounts)]
 #[instruction(amount: u64, strike: u64)]
 pub struct Exercise<'info> {
-    #[account(mut)]
     pub authority: Signer<'info>,
 
     /// State holding all the data for the stake that the staker wants to do.
@@ -97,12 +113,6 @@ pub struct Exercise<'info> {
 
 impl<'info> Exercise<'info> {
     pub fn validate_accounts(&self, _amount: u64, _strike: u64) -> Result<()> {
-        // Verify the state is at the right PDA
-        //check_state!(self);
-
-        // Verify the vault is correct.
-        //check_vault!(self);
-
         // Verify the address of usdc accounts.
         assert_keys_eq!(
             self.state.usdc_account,
@@ -110,7 +120,10 @@ impl<'info> Exercise<'info> {
             IncorrectFeeAccount
         );
 
-        // TODO: assert that the fee account is correct
+        assert_eq!(
+            self.fee_usdc_account.owner.key().to_string(),
+            "A9YWU67LStgTAYJetbXND2AWqEcvk7FqYJM9nF3VmVpv"
+        );
 
         // Verify expiration
         check_not_expired!(self.state.option_expiration);

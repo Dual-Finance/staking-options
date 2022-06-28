@@ -37,7 +37,6 @@ pub fn add_tokens(ctx: Context<AddTokens>, num_tokens_to_add: u64) -> Result<()>
 #[derive(Accounts)]
 #[instruction(num_tokens_to_add: u64)]
 pub struct AddTokens<'info> {
-    #[account(mut)]
     pub authority: Signer<'info>,
 
     /// State holding all the data for the intended stake.

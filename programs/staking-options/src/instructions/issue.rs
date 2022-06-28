@@ -6,9 +6,6 @@ pub fn issue(ctx: Context<Issue>, amount: u64) -> Result<()> {
     // Verify the state is at the right address
     check_state!(ctx);
 
-    // TODO: Verify the SO mint is at the right address
-    // check_option_mint!(ctx);
-
     // Mint tokens for the user
     let cpi_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -30,7 +27,6 @@ pub fn issue(ctx: Context<Issue>, amount: u64) -> Result<()> {
 #[derive(Accounts)]
 #[instruction(amount: u64)]
 pub struct Issue<'info> {
-    #[account(mut)]
     pub authority: Signer<'info>,
 
     // State holding all the data for the stake that the staker wants to do.
@@ -58,6 +54,11 @@ impl<'info> Issue<'info> {
         // Make sure there are enough tokens to back the options.
         invariant!(self.state.options_available > amount, NotEnoughTokens);
 
+        // Do not need to verify the SO mint is at the right address. The
+        // authority check is sufficient. If a different mint was somehow
+        // assigned the same authority, it is not an issue if the authority
+        // issues those tokens.
+        
         Ok(())
     }
 }

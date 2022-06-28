@@ -5,6 +5,26 @@ use vipers::prelude::*;
 pub use crate::common::*;
 
 pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
+    // Verify the state is at the right address
+    let (old_so_state, _old_so_state_bump) = Pubkey::find_program_address(
+        &[
+            SO_CONFIG_SEED,
+            &ctx.accounts.old_state.period_num.to_be_bytes(),
+            &ctx.accounts.old_state.project_token_mint.key().to_bytes(),
+        ],
+        ctx.program_id,
+    );
+    let (new_so_state, _new_so_state_bump) = Pubkey::find_program_address(
+        &[
+            SO_CONFIG_SEED,
+            &ctx.accounts.new_state.period_num.to_be_bytes(),
+            &ctx.accounts.new_state.project_token_mint.key().to_bytes(),
+        ],
+        ctx.program_id,
+    );
+    assert_keys_eq!(ctx.accounts.old_state.key(), old_so_state, InvalidState);
+    assert_keys_eq!(ctx.accounts.new_state.key(), new_so_state, InvalidState);
+
     // Update the new state with old state tokens
     ctx.accounts.new_state.options_available = unwrap_int!(ctx
         .accounts
@@ -30,7 +50,7 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
             anchor_spl::token::Transfer {
                 from: ctx.accounts.old_project_token_vault.to_account_info(),
                 to: ctx.accounts.new_project_token_vault.to_account_info(),
-                authority: ctx.accounts.new_project_token_vault.to_account_info(),
+                authority: ctx.accounts.old_project_token_vault.to_account_info(),
             },
             &[&[
                 SO_VAULT_SEED,
@@ -48,14 +68,13 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
 #[derive(Accounts)]
 #[instruction()]
 pub struct Rollover<'info> {
-    #[account(mut)]
     pub authority: Signer<'info>,
 
-    // State holding all the data for the stake that the staker wants to do.
+    /// State holding all the data for the stake that the staker wants to do.
     #[account(mut)]
     pub old_state: Box<Account<'info, State>>,
 
-    // State holding all the data for the stake that the staker wants to do.
+    /// State holding all the data for the stake that the staker wants to do.
     #[account(mut)]
     pub new_state: Box<Account<'info, State>>,
 
@@ -72,26 +91,6 @@ pub struct Rollover<'info> {
 
 impl<'info> Rollover<'info> {
     pub fn validate_accounts(&self) -> Result<()> {
-        // Verify the state is at the right address
-        let (old_so_state, _old_so_state_bump) = Pubkey::find_program_address(
-            &[
-                SO_CONFIG_SEED,
-                &self.old_state.period_num.to_be_bytes(),
-                &self.old_state.project_token_mint.key().to_bytes(),
-            ],
-            &Pubkey::new(THIS_PROGRAM),
-        );
-        let (new_so_state, _new_so_state_bump) = Pubkey::find_program_address(
-            &[
-                SO_CONFIG_SEED,
-                &self.new_state.period_num.to_be_bytes(),
-                &self.new_state.project_token_mint.key().to_bytes(),
-            ],
-            &Pubkey::new(THIS_PROGRAM),
-        );
-        assert_keys_eq!(self.old_state.key(), old_so_state, InvalidState);
-        assert_keys_eq!(self.new_state.key(), new_so_state, InvalidState);
-
         assert_keys_eq!(
             self.new_state.authority.key(),
             self.old_state.authority.key(),

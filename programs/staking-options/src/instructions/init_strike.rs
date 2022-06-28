@@ -9,7 +9,6 @@ pub fn init_strike(ctx: Context<InitStrike>, strike: u64) -> Result<()> {
     // program id.
     check_state!(ctx);
 
-    msg!("Starting to init strike");
     ctx.accounts.state.strikes.push(strike);
 
     Ok(())
