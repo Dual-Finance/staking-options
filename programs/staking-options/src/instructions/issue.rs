@@ -58,7 +58,7 @@ impl<'info> Issue<'info> {
         // authority check is sufficient. If a different mint was somehow
         // assigned the same authority, it is not an issue if the authority
         // issues those tokens.
-        
+
         Ok(())
     }
 }
