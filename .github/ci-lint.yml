@@ -1,0 +1,41 @@
+name: Lint
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  SOLANA_VERSION: "1.9.28"
+  RUST_TOOLCHAIN: stable
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          profile: minimal
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: rustfmt, clippy
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v1
+
+      - name: Run fmt
+        run: cargo fmt -- --check
+      # The style and complexity lints have not been processed yet.
+      - name: Run clippy
+        run: cargo clippy -- --deny=warnings --allow=clippy::style --allow=clippy::complexity
+
+      - name: Install eslint
+        run: yarn install
+      - name: Run ESLint on test code
+        run: yarn run eslint  --ignore-path .gitignore --ext .js,.ts,.tsx tests/*
