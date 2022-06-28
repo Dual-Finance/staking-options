@@ -211,7 +211,7 @@ describe('staking-options', () => {
     feeUsdcAccount = await createTokenAccount(
       provider,
       usdcMint,
-      new PublicKey("A9YWU67LStgTAYJetbXND2AWqEcvk7FqYJM9nF3VmVpv"),
+      new PublicKey('A9YWU67LStgTAYJetbXND2AWqEcvk7FqYJM9nF3VmVpv'),
     );
     userProjectTokenAccount = await createTokenAccount(
       provider,
@@ -333,7 +333,7 @@ describe('staking-options', () => {
     optionExpiration = Math.floor(Date.now() / 1000 + 100);
     subscriptionPeriodEnd = optionExpiration;
 
-    console.log("Config again");
+    console.log('Config again');
     await program.rpc.config(
       new anchor.BN(newPeriodNum),
       new anchor.BN(optionExpiration),
@@ -355,19 +355,18 @@ describe('staking-options', () => {
       },
     );
 
-    console.log("Rolling over");
+    console.log('Rolling over');
     await program.rpc.rollover(
       {
         accounts: {
           authority: provider.wallet.publicKey,
           oldState: state,
-          newState: newState,
+          newState,
           oldProjectTokenVault: projectTokenVault,
-          newProjectTokenVault: newProjectTokenVault,
+          newProjectTokenVault,
           tokenProgram: TOKEN_PROGRAM_ID,
         },
       },
     );
   });
-
 });
