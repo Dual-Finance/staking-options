@@ -340,7 +340,9 @@ describe('staking-options', () => {
       projectTokenAccount,
     );
     assert.equal(
-      userProjectTokenAccountAccount.amount.toNumber(), numTokensInPeriod - OPTIONS_AMOUNT);
+      userProjectTokenAccountAccount.amount.toNumber(),
+      numTokensInPeriod - OPTIONS_AMOUNT,
+    );
   });
 
   it('Rollover Success', async () => {
@@ -423,6 +425,8 @@ describe('staking-options', () => {
       newProjectTokenVault,
     );
     assert.equal(
-      newProjectTokenVaultAccount.amount.toNumber(), 2 * numTokensInPeriod);
+      newProjectTokenVaultAccount.amount.toNumber(),
+      2 * numTokensInPeriod,
+    );
   });
 });
