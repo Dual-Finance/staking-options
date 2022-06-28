@@ -8,6 +8,7 @@ import { StakingOptions } from '../target/types/staking_options';
 import {
   createMint,
   createTokenAccount,
+  getTokenAccount,
   mintToAccount,
   DEFAULT_MINT_DECIMALS,
   toBeBytes,
@@ -260,23 +261,58 @@ describe('staking-options', () => {
 
   it('Config Success', async () => {
     await configureSO();
+
+    // Verify the State.
+    const stateObj = await program.account.state.fetch(state);
+    assert.equal(stateObj.periodNum.toNumber(), 0);
+    assert.equal(stateObj.authority.toBase58(), provider.wallet.publicKey.toBase58());
+    assert.equal(stateObj.optionsAvailable.toNumber(), numTokensInPeriod);
+    assert.equal(stateObj.optionExpiration.toNumber(), optionExpiration);
+    assert.equal(stateObj.subscriptionPeriodEnd.toNumber(), subscriptionPeriodEnd);
+    assert.equal(stateObj.decimals, DEFAULT_MINT_DECIMALS);
+    assert.equal(stateObj.projectTokenMint.toBase58(), projectTokenMint.toBase58());
+    assert.equal(stateObj.usdcAccount.toBase58(), usdcAccount.toBase58());
+    assert.equal(stateObj.strikes.length, 0);
+
+    // Verify the tokens are stored.
+    const projectTokenVaultAccount = await getTokenAccount(
+      provider,
+      projectTokenVault,
+    );
+    assert.equal(projectTokenVaultAccount.amount.toNumber(), numTokensInPeriod);
   });
 
   it('InitStrike Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
+
+    // Verify the strike exists in the state.
+    const stateObj = await program.account.state.fetch(state);
+    assert.equal(stateObj.strikes[0].toNumber(), STRIKE);
   });
 
   it('Issue Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
     await issue(OPTIONS_AMOUNT);
+
+    const userSoAccountAccount = await getTokenAccount(
+      provider,
+      userSoAccount,
+    );
+    assert.equal(userSoAccountAccount.amount.toNumber(), OPTIONS_AMOUNT);
   });
 
   it('AddTokens Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
     await addTokens();
+
+    const projectTokenVaultAccount = await getTokenAccount(
+      provider,
+      projectTokenVault,
+    );
+    assert.equal(projectTokenVaultAccount.amount.toNumber(), numTokensInPeriod + OPTIONS_AMOUNT);
   });
 
   it('Exercise Success', async () => {
@@ -284,6 +320,12 @@ describe('staking-options', () => {
     await initStrike(STRIKE);
     await issue(OPTIONS_AMOUNT);
     await exercise(OPTIONS_AMOUNT);
+
+    const userProjectTokenAccountAccount = await getTokenAccount(
+      provider,
+      userProjectTokenAccount,
+    );
+    assert.equal(userProjectTokenAccountAccount.amount.toNumber(), OPTIONS_AMOUNT);
   });
 
   it('Withdraw Success', async () => {
@@ -292,6 +334,13 @@ describe('staking-options', () => {
     await issue(OPTIONS_AMOUNT);
     await exercise(OPTIONS_AMOUNT);
     await withdraw();
+
+    const userProjectTokenAccountAccount = await getTokenAccount(
+      provider,
+      projectTokenAccount,
+    );
+    assert.equal(
+      userProjectTokenAccountAccount.amount.toNumber(), numTokensInPeriod - OPTIONS_AMOUNT);
   });
 
   it('Rollover Success', async () => {
@@ -368,5 +417,12 @@ describe('staking-options', () => {
         },
       },
     );
+
+    const newProjectTokenVaultAccount = await getTokenAccount(
+      provider,
+      newProjectTokenVault,
+    );
+    assert.equal(
+      newProjectTokenVaultAccount.amount.toNumber(), 2 * numTokensInPeriod);
   });
 });
