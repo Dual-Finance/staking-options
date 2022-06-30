@@ -1,0 +1,40 @@
+name: Anchor test
+on:
+  push:
+    branches: master
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: projectserum/build:v0.24.2
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: List rustup toolchains
+        run: rustup toolchain list
+      - name: Set default toolchain
+        run: rustup default stable
+      - name: List rustup toolchains
+        run: rustup toolchain list
+      - name: Generate new keygen
+        run: solana-keygen new
+      - name: Check solana config
+        run: solana config get
+      - name: Install yarn dependencies
+        run: |
+          yarn install
+          yarn add ts-mocha
+      - name: Build
+        run: anchor build
+
+      - uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 120
+          max_attempts: 3
+          command: |
+            sleep 10
+            anchor build
+            anchor deploy
+            sleep 10
+            anchor test
