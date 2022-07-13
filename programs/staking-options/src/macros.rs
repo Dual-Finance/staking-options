@@ -65,11 +65,7 @@ macro_rules! check_mint {
             $ctx.program_id,
         );
 
-        assert_keys_eq!(
-            $ctx.accounts.option_mint.key(),
-            expected_mint,
-            InvalidMint
-        );
+        assert_keys_eq!($ctx.accounts.option_mint.key(), expected_mint, InvalidMint);
     };
 }
 
