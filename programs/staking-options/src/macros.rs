@@ -53,6 +53,26 @@ macro_rules! check_vault {
     };
 }
 
+// This check verifies that nobody made a fake SO State at a different address.
+macro_rules! check_mint {
+    ($ctx:expr, $strike:expr) => {
+        let (expected_mint, _expected_mint_bump) = Pubkey::find_program_address(
+            &[
+                SO_MINT_SEED,
+                &$ctx.accounts.state.key().to_bytes(),
+                &$strike.to_be_bytes(),
+            ],
+            $ctx.program_id,
+        );
+
+        assert_keys_eq!(
+            $ctx.accounts.option_mint.key(),
+            expected_mint,
+            InvalidMint
+        );
+    };
+}
+
 // Create the seeds for an SO Vault. Needing when signing a transaction for it.
 macro_rules! gen_vault_seeds {
     ($ctx:expr) => {

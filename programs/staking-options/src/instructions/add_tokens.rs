@@ -58,6 +58,7 @@ impl<'info> AddTokens<'info> {
     pub fn validate_accounts(&self, _num_tokens_to_add: u64) -> Result<()> {
         // Do not need to verify num tokens to add is valid because the token
         // program does that.
+
         // Check that the token type matches the mint in the SO state that is
         // getting credited.
         assert_keys_eq!(
@@ -69,7 +70,9 @@ impl<'info> AddTokens<'info> {
         // Do not allow adding tokens to an SO that is expired already.
         check_not_expired!(self.state.subscription_period_end);
 
-        // Adding tokens does not require an authority check.
+        // Adding tokens does not require an authority check because the only
+        // authority that matters is that the source of the tokens is fine
+        // and that is checked by the token program.
 
         Ok(())
     }

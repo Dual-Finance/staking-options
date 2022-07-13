@@ -6,6 +6,8 @@ pub fn issue(ctx: Context<Issue>, amount: u64) -> Result<()> {
     // Verify the state is at the right address
     check_state!(ctx);
 
+    //check_mint!(ctx, strike);
+
     // Mint tokens for the user
     let cpi_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -53,6 +55,8 @@ impl<'info> Issue<'info> {
 
         // Make sure there are enough tokens to back the options.
         invariant!(self.state.options_available > amount, NotEnoughTokens);
+
+        // TODO: Check the SO mint
 
         // Do not need to verify the SO mint is at the right address. The
         // authority check is sufficient. If a different mint was somehow

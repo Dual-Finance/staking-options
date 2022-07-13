@@ -109,13 +109,18 @@ impl<'info> Config<'info> {
             self.project_token_account.mint.key()
         );
 
+        // period_num should be increasing, but not necessarily required.
+        // num_tokens_in_period is verified by the token program doing the transfer.
+
         // Make sure it is not already expired.
         check_not_expired!(option_expiration);
         check_not_expired!(subscription_period_end);
 
-        // Do not need to verify the type of USDC account since if it is
-        // invalid, then the SO is worthless but no harm is done to the
-        // project.
+        // Verify the USDC mint for the account that receives payments.
+        assert_eq!(
+            self.usdc_account.mint.key().to_string(),
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        );
 
         Ok(())
     }

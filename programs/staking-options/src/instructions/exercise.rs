@@ -9,6 +9,9 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
     // Verify the vault is correct.
     check_vault!(ctx);
 
+    // Verify the mint is correct.
+    check_mint!(ctx, strike);
+
     // Take the option tokens and burn
     let burn_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -81,7 +84,7 @@ pub struct Exercise<'info> {
     /// State holding all the data for the stake that the staker wants to do.
     pub state: Box<Account<'info, State>>,
 
-    /// Where the so are coming from.
+    /// Where the SO are coming from.
     #[account(mut)]
     pub user_so_account: Box<Account<'info, TokenAccount>>,
     /// Mint is needed to burn the options.
@@ -120,9 +123,15 @@ impl<'info> Exercise<'info> {
             IncorrectFeeAccount
         );
 
+        // Verify that it is owned by DUAL.
         assert_eq!(
             self.fee_usdc_account.owner.key().to_string(),
             "A9YWU67LStgTAYJetbXND2AWqEcvk7FqYJM9nF3VmVpv"
+        );
+        // Verify that it is USDC.
+        assert_eq!(
+            self.fee_usdc_account.mint.key().to_string(),
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         );
 
         // Verify expiration

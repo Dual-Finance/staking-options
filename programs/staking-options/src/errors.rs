@@ -12,6 +12,8 @@ pub enum ErrorCode {
     InvalidState,
     #[msg("Vault did not match")]
     InvalidVault,
+    #[msg("Mint did not match")]
+    InvalidMint,
     #[msg("Account receiving fees does not match")]
     IncorrectFeeAccount,
     #[msg("Not enough tokens to issue the SO")]

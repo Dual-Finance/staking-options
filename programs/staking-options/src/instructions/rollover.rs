@@ -94,6 +94,7 @@ pub struct Rollover<'info> {
 
 impl<'info> Rollover<'info> {
     pub fn validate_accounts(&self) -> Result<()> {
+        // Dont rollover to a new state if there is a different authority.
         assert_keys_eq!(
             self.new_state.authority.key(),
             self.old_state.authority.key(),
