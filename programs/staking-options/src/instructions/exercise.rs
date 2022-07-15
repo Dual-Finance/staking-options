@@ -116,7 +116,8 @@ pub struct Exercise<'info> {
 
 impl<'info> Exercise<'info> {
     pub fn validate_accounts(&self, _amount: u64, _strike: u64) -> Result<()> {
-        // Verify the address of usdc accounts.
+        // Verify the address of usdc accounts. Because this account matches,
+        // the token type will also be verified by the token program.
         assert_keys_eq!(
             self.state.usdc_account,
             self.project_usdc_account,
@@ -127,11 +128,6 @@ impl<'info> Exercise<'info> {
         assert_eq!(
             self.fee_usdc_account.owner.key().to_string(),
             "A9YWU67LStgTAYJetbXND2AWqEcvk7FqYJM9nF3VmVpv"
-        );
-        // Verify that it is USDC.
-        assert_eq!(
-            self.fee_usdc_account.mint.key().to_string(),
-            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         );
 
         // Verify expiration

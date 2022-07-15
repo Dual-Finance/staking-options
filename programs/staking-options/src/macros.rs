@@ -23,6 +23,7 @@ macro_rules! check_state {
         let (so_state, _so_state_bump) = Pubkey::find_program_address(
             &[
                 SO_CONFIG_SEED,
+                &$ctx.accounts.state.so_name.as_bytes(),
                 &$ctx.accounts.state.period_num.to_be_bytes(),
                 &$ctx.accounts.state.project_token_mint.key().to_bytes(),
             ],

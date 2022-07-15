@@ -9,7 +9,11 @@ pub const NUM_ATOMS_PER_USDC: u64 = 1_000_000;
 
 #[account]
 pub struct State {
-    // For identifying the SO.
+    // Identifier for this SO. This allows multiple projects to use the same
+    // token, which is especially useful for downside SO.
+    pub so_name: String,
+
+    // For identifying the SO within the same SO name.
     pub period_num: u64,
 
     // Authority is required to sign all issuing and withdrawing. Should be a

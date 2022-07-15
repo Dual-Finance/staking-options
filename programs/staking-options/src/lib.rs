@@ -30,6 +30,7 @@ pub mod staking_options {
         option_expiration: u64,
         subscription_period_end: u64,
         num_tokens_in_period: u64,
+        so_name: String,
     ) -> Result<()> {
         config::config(
             ctx,
@@ -37,6 +38,7 @@ pub mod staking_options {
             option_expiration,
             subscription_period_end,
             num_tokens_in_period,
+            so_name,
         )
     }
 

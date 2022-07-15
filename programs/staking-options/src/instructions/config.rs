@@ -9,9 +9,14 @@ pub fn config(
     option_expiration: u64,
     subscription_period_end: u64,
     num_tokens_in_period: u64,
+    so_name: String,
 ) -> Result<()> {
+    // Verify the SO name is a reasonable length.
+    invariant!(so_name.len() < 64);
+
     // Fill out the State
     ctx.accounts.state.period_num = period_num;
+    ctx.accounts.state.so_name = so_name;
     ctx.accounts.state.authority = ctx.accounts.so_authority.key();
     ctx.accounts.state.options_available = num_tokens_in_period;
     ctx.accounts.state.option_expiration = option_expiration;
@@ -36,7 +41,7 @@ pub fn config(
 }
 
 #[derive(Accounts)]
-#[instruction(period_num: u64, option_expiration: u64, subscription_period_end: u64, num_tokens_in_period: u64)]
+#[instruction(period_num: u64, option_expiration: u64, subscription_period_end: u64, num_tokens_in_period: u64, so_name: String)]
 pub struct Config<'info> {
     /// Does not have to match the authority for the SO State, but it can.
     #[account(mut)]
@@ -50,10 +55,11 @@ pub struct Config<'info> {
     #[account(
         init,
         payer = authority,
-        seeds = [SO_CONFIG_SEED, &period_num.to_be_bytes(), &project_token_mint.key().to_bytes()],
+        seeds = [SO_CONFIG_SEED, so_name.as_bytes(), &period_num.to_be_bytes(), &project_token_mint.key().to_bytes()],
         bump,
         space =
           8 +     // discriminator
+          64 +    // so_name
           8 +     // period_num
           32 +    // authority
           8 +     // options_available
@@ -116,11 +122,8 @@ impl<'info> Config<'info> {
         check_not_expired!(option_expiration);
         check_not_expired!(subscription_period_end);
 
-        // Verify the USDC mint for the account that receives payments.
-        assert_eq!(
-            self.usdc_account.mint.key().to_string(),
-            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-        );
+        // Cannot verify the token type of the usdc_account because it could be
+        // something else for downside SO.
 
         Ok(())
     }

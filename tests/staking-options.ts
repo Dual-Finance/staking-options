@@ -44,6 +44,7 @@ describe('staking-options', () => {
   const numTokensInPeriod: number = 1_000_000_000;
   const STRIKE: number = 1_000;
   const OPTIONS_AMOUNT: number = 1_000;
+  const SO_NAME: string = "SO";
 
   async function configureSO() {
     console.log('Configuring SO');
@@ -77,6 +78,7 @@ describe('staking-options', () => {
       await anchor.web3.PublicKey.findProgramAddress(
         [
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_CONFIG_SEED)),
+          Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
           toBeBytes(periodNum),
           projectTokenMint.toBuffer(),
         ],
@@ -100,6 +102,7 @@ describe('staking-options', () => {
       new anchor.BN(optionExpiration),
       new anchor.BN(subscriptionPeriodEnd),
       new anchor.BN(numTokensInPeriod),
+      SO_NAME,
       {
         accounts: {
           authority: provider.wallet.publicKey,
@@ -362,6 +365,7 @@ describe('staking-options', () => {
       await anchor.web3.PublicKey.findProgramAddress(
         [
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_CONFIG_SEED)),
+          Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
           toBeBytes(newPeriodNum),
           projectTokenMint.toBuffer(),
         ],
