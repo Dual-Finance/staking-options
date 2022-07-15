@@ -44,7 +44,7 @@ describe('staking-options', () => {
   const numTokensInPeriod: number = 1_000_000_000;
   const STRIKE: number = 1_000;
   const OPTIONS_AMOUNT: number = 1_000;
-  const SO_NAME: string = "SO";
+  const SO_NAME: string = 'SO';
 
   async function configureSO() {
     console.log('Configuring SO');
