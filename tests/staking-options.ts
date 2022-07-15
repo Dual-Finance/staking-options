@@ -394,6 +394,7 @@ describe('staking-options', () => {
       new anchor.BN(optionExpiration),
       new anchor.BN(subscriptionPeriodEnd),
       new anchor.BN(numTokensInPeriod),
+      SO_NAME,
       {
         accounts: {
           authority: provider.wallet.publicKey,
