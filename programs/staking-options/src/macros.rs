@@ -2,7 +2,7 @@ macro_rules! check_not_expired {
     ($expiration:expr) => {
         invariant!(
             Clock::get().unwrap().unix_timestamp as u64 <= $expiration,
-            NotYetExpired
+            Expired
         );
     };
 }
@@ -11,7 +11,7 @@ macro_rules! check_expired {
     ($expiration:expr) => {
         invariant!(
             Clock::get().unwrap().unix_timestamp as u64 > $expiration,
-            Expired
+            NotYetExpired
         );
     };
 }

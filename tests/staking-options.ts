@@ -246,7 +246,7 @@ describe('staking-options', () => {
   async function withdraw() {
     console.log('Withdrawing');
     console.log('Sleeping til options expire');
-    await new Promise((r) => setTimeout(r, 100000));
+    await new Promise((r) => setTimeout(r, 100_000));
 
     await program.rpc.withdraw(
       {
@@ -383,9 +383,9 @@ describe('staking-options', () => {
       ));
 
     // Wait for the old one to expire.
-    await new Promise((r) => setTimeout(r, 100000));
+    await new Promise((r) => setTimeout(r, 100_000));
 
-    optionExpiration = Math.floor(Date.now() / 1000 + 100);
+    optionExpiration = Math.floor(Date.now() / 1000 + 1000);
     subscriptionPeriodEnd = optionExpiration;
 
     console.log('Config again');

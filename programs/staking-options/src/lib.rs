@@ -12,6 +12,18 @@ pub use crate::common::*;
 pub use crate::errors::ErrorCode;
 pub use crate::instructions::*;
 
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    name: "Dual Staking Options",
+    project_url: "http://dual.finance",
+    contacts: "email:dual-labs@dual.finance",
+    policy: "https://github.com/Dual-Finance/staking-options/SECURITY.md",
+
+    preferred_languages: "en",
+    source_code: "https://github.com/Dual-Finance/staking-options",
+    auditors: "None"
+}
+
 declare_id!("4yx1NJ4Vqf2zT1oVLk4SySBhhDJXmXFt88ncm4gPxtL7");
 
 #[program]
