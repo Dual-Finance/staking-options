@@ -17,7 +17,7 @@ solana_security_txt::security_txt! {
     name: "Dual Staking Options",
     project_url: "http://dual.finance",
     contacts: "email:dual-labs@dual.finance",
-    policy: "https://github.com/Dual-Finance/staking-options/SECURITY.md",
+    policy: "https://github.com/Dual-Finance/staking-options/blob/master/SECURITY.md",
 
     preferred_languages: "en",
     source_code: "https://github.com/Dual-Finance/staking-options",

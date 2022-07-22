@@ -8,6 +8,9 @@ wallet = "~/.config/solana/id.json"
 [programs.localnet]
 staking_options = "4yx1NJ4Vqf2zT1oVLk4SySBhhDJXmXFt88ncm4gPxtL7"
 
+[programs.mainnet]
+staking_options = "4yx1NJ4Vqf2zT1oVLk4SySBhhDJXmXFt88ncm4gPxtL7"
+
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
