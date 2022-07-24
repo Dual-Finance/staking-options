@@ -26,17 +26,17 @@ describe('staking-options', () => {
   const SO_VAULT_SEED = 'so-vault';
   const SO_MINT_SEED = 'so-mint';
 
-  let projectTokenMint: PublicKey;
-  let projectTokenAccount: PublicKey;
-  let projectTokenVault: PublicKey;
+  let baseTokenMint: PublicKey;
+  let baseTokenAccount: PublicKey;
+  let baseTokenVault: PublicKey;
   let state: PublicKey;
-  let usdcMint: PublicKey;
-  let usdcAccount: PublicKey;
-  let userUsdcAccount: PublicKey;
+  let quoteMint: PublicKey;
+  let quoteAccount: PublicKey;
+  let userQuoteAccount: PublicKey;
   let optionMint: PublicKey;
   let userSoAccount: PublicKey;
-  let feeUsdcAccount: PublicKey;
-  let userProjectTokenAccount: PublicKey;
+  let feeQuoteAccount: PublicKey;
+  let userBaseTokenAccount: PublicKey;
 
   let optionExpiration: number;
   let subscriptionPeriodEnd: number;
@@ -52,24 +52,24 @@ describe('staking-options', () => {
     optionExpiration = Math.floor(Date.now() / 1000 + 100);
     subscriptionPeriodEnd = optionExpiration;
 
-    projectTokenMint = await createMint(provider);
-    projectTokenAccount = await createTokenAccount(
+    baseTokenMint = await createMint(provider);
+    baseTokenAccount = await createTokenAccount(
       provider,
-      projectTokenMint,
+      baseTokenMint,
       provider.wallet.publicKey,
     );
     await mintToAccount(
       provider,
-      projectTokenMint,
-      projectTokenAccount,
+      baseTokenMint,
+      baseTokenAccount,
       numTokensInPeriod,
       provider.wallet.publicKey,
     );
-    if (!usdcMint) {
-      usdcMint = await createMint(provider);
-      usdcAccount = await createTokenAccount(
+    if (!quoteMint) {
+      quoteMint = await createMint(provider);
+      quoteAccount = await createTokenAccount(
         provider,
-        usdcMint,
+        quoteMint,
         provider.wallet.publicKey,
       );
     }
@@ -80,22 +80,22 @@ describe('staking-options', () => {
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_CONFIG_SEED)),
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
           toBeBytes(periodNum),
-          projectTokenMint.toBuffer(),
+          baseTokenMint.toBuffer(),
         ],
         program.programId,
       ));
     state = _state;
 
-    const [_projectTokenVault, _projectTokenVaultBump] = (
+    const [_baseTokenVault, _baseTokenVaultBump] = (
       await anchor.web3.PublicKey.findProgramAddress(
         [
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
           toBeBytes(periodNum),
-          projectTokenMint.toBuffer(),
+          baseTokenMint.toBuffer(),
         ],
         program.programId,
       ));
-    projectTokenVault = _projectTokenVault;
+    baseTokenVault = _baseTokenVault;
 
     await program.rpc.config(
       new anchor.BN(periodNum),
@@ -108,10 +108,11 @@ describe('staking-options', () => {
           authority: provider.wallet.publicKey,
           soAuthority: provider.wallet.publicKey,
           state,
-          projectTokenVault,
-          projectTokenAccount,
-          usdcAccount,
-          projectTokenMint,
+          baseTokenVault,
+          baseTokenAccount,
+          quoteAccount,
+          quoteMint,
+          baseTokenMint,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -149,7 +150,7 @@ describe('staking-options', () => {
     );
   }
 
-  async function issue(amount: number) {
+  async function issue(amount: number, strike: number) {
     console.log('Issuing');
 
     userSoAccount = await createTokenAccount(
@@ -160,6 +161,7 @@ describe('staking-options', () => {
 
     await program.rpc.issue(
       new anchor.BN(amount),
+      new anchor.BN(strike),
       {
         accounts: {
           authority: provider.wallet.publicKey,
@@ -177,8 +179,8 @@ describe('staking-options', () => {
     // Top off the number of available tokens for the LSO.
     await mintToAccount(
       provider,
-      projectTokenMint,
-      projectTokenAccount,
+      baseTokenMint,
+      baseTokenAccount,
       numTokensInPeriod,
       provider.wallet.publicKey,
     );
@@ -189,8 +191,8 @@ describe('staking-options', () => {
         accounts: {
           authority: provider.wallet.publicKey,
           state,
-          projectTokenVault,
-          projectTokenAccount,
+          baseTokenVault,
+          baseTokenAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
         },
       },
@@ -200,26 +202,26 @@ describe('staking-options', () => {
   async function exercise(amount: number) {
     console.log('Exercising');
 
-    userUsdcAccount = await createTokenAccount(
+    userQuoteAccount = await createTokenAccount(
       provider,
-      usdcMint,
+      quoteMint,
       provider.wallet.publicKey,
     );
     await mintToAccount(
       provider,
-      usdcMint,
-      userUsdcAccount,
+      quoteMint,
+      userQuoteAccount,
       OPTIONS_AMOUNT * STRIKE * DEFAULT_MINT_DECIMALS,
       provider.wallet.publicKey,
     );
-    feeUsdcAccount = await createTokenAccount(
+    feeQuoteAccount = await createTokenAccount(
       provider,
-      usdcMint,
+      quoteMint,
       new PublicKey('A9YWU67LStgTAYJetbXND2AWqEcvk7FqYJM9nF3VmVpv'),
     );
-    userProjectTokenAccount = await createTokenAccount(
+    userBaseTokenAccount = await createTokenAccount(
       provider,
-      projectTokenMint,
+      baseTokenMint,
       provider.wallet.publicKey,
     );
 
@@ -232,11 +234,11 @@ describe('staking-options', () => {
           state,
           userSoAccount,
           optionMint,
-          userUsdcAccount,
-          projectUsdcAccount: usdcAccount,
-          feeUsdcAccount,
-          projectTokenVault,
-          userProjectTokenAccount,
+          userQuoteAccount,
+          projectQuoteAccount: quoteAccount,
+          feeQuoteAccount,
+          baseTokenVault,
+          userBaseTokenAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
         },
       },
@@ -253,8 +255,8 @@ describe('staking-options', () => {
         accounts: {
           authority: provider.wallet.publicKey,
           state,
-          projectTokenVault,
-          projectTokenAccount,
+          baseTokenVault,
+          baseTokenAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
@@ -272,17 +274,18 @@ describe('staking-options', () => {
     assert.equal(stateObj.optionsAvailable.toNumber(), numTokensInPeriod);
     assert.equal(stateObj.optionExpiration.toNumber(), optionExpiration);
     assert.equal(stateObj.subscriptionPeriodEnd.toNumber(), subscriptionPeriodEnd);
-    assert.equal(stateObj.decimals, DEFAULT_MINT_DECIMALS);
-    assert.equal(stateObj.projectTokenMint.toBase58(), projectTokenMint.toBase58());
-    assert.equal(stateObj.usdcAccount.toBase58(), usdcAccount.toBase58());
+    assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
+    assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
+    assert.equal(stateObj.baseTokenMint.toBase58(), baseTokenMint.toBase58());
+    assert.equal(stateObj.quoteAccount.toBase58(), quoteAccount.toBase58());
     assert.equal(stateObj.strikes.length, 0);
 
     // Verify the tokens are stored.
-    const projectTokenVaultAccount = await getTokenAccount(
+    const baseTokenVaultAccount = await getTokenAccount(
       provider,
-      projectTokenVault,
+      baseTokenVault,
     );
-    assert.equal(projectTokenVaultAccount.amount.toNumber(), numTokensInPeriod);
+    assert.equal(baseTokenVaultAccount.amount.toNumber(), numTokensInPeriod);
   });
 
   it('InitStrike Success', async () => {
@@ -297,7 +300,7 @@ describe('staking-options', () => {
   it('Issue Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
-    await issue(OPTIONS_AMOUNT);
+    await issue(OPTIONS_AMOUNT, STRIKE);
 
     const userSoAccountAccount = await getTokenAccount(
       provider,
@@ -311,39 +314,39 @@ describe('staking-options', () => {
     await initStrike(STRIKE);
     await addTokens();
 
-    const projectTokenVaultAccount = await getTokenAccount(
+    const baseTokenVaultAccount = await getTokenAccount(
       provider,
-      projectTokenVault,
+      baseTokenVault,
     );
-    assert.equal(projectTokenVaultAccount.amount.toNumber(), numTokensInPeriod + OPTIONS_AMOUNT);
+    assert.equal(baseTokenVaultAccount.amount.toNumber(), numTokensInPeriod + OPTIONS_AMOUNT);
   });
 
   it('Exercise Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
-    await issue(OPTIONS_AMOUNT);
+    await issue(OPTIONS_AMOUNT, STRIKE);
     await exercise(OPTIONS_AMOUNT);
 
-    const userProjectTokenAccountAccount = await getTokenAccount(
+    const userBaseTokenAccountAccount = await getTokenAccount(
       provider,
-      userProjectTokenAccount,
+      userBaseTokenAccount,
     );
-    assert.equal(userProjectTokenAccountAccount.amount.toNumber(), OPTIONS_AMOUNT);
+    assert.equal(userBaseTokenAccountAccount.amount.toNumber(), OPTIONS_AMOUNT);
   });
 
   it('Withdraw Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
-    await issue(OPTIONS_AMOUNT);
+    await issue(OPTIONS_AMOUNT, STRIKE);
     await exercise(OPTIONS_AMOUNT);
     await withdraw();
 
-    const userProjectTokenAccountAccount = await getTokenAccount(
+    const userBaseTokenAccountAccount = await getTokenAccount(
       provider,
-      projectTokenAccount,
+      baseTokenAccount,
     );
     assert.equal(
-      userProjectTokenAccountAccount.amount.toNumber(),
+      userBaseTokenAccountAccount.amount.toNumber(),
       numTokensInPeriod - OPTIONS_AMOUNT,
     );
   });
@@ -354,8 +357,8 @@ describe('staking-options', () => {
     // Rollover again
     await mintToAccount(
       provider,
-      projectTokenMint,
-      projectTokenAccount,
+      baseTokenMint,
+      baseTokenAccount,
       numTokensInPeriod,
       provider.wallet.publicKey,
     );
@@ -367,17 +370,17 @@ describe('staking-options', () => {
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_CONFIG_SEED)),
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
           toBeBytes(newPeriodNum),
-          projectTokenMint.toBuffer(),
+          baseTokenMint.toBuffer(),
         ],
         program.programId,
       ));
 
-    const [newProjectTokenVault, _projectTokenVaultBump] = (
+    const [newBaseTokenVault, _baseTokenVaultBump] = (
       await anchor.web3.PublicKey.findProgramAddress(
         [
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
           toBeBytes(newPeriodNum),
-          projectTokenMint.toBuffer(),
+          baseTokenMint.toBuffer(),
         ],
         program.programId,
       ));
@@ -385,7 +388,7 @@ describe('staking-options', () => {
     // Wait for the old one to expire.
     await new Promise((r) => setTimeout(r, 100_000));
 
-    optionExpiration = Math.floor(Date.now() / 1000 + 1000);
+    optionExpiration = Math.floor(Date.now() / 1000 + 2000);
     subscriptionPeriodEnd = optionExpiration;
 
     console.log('Config again');
@@ -400,10 +403,11 @@ describe('staking-options', () => {
           authority: provider.wallet.publicKey,
           soAuthority: provider.wallet.publicKey,
           state: newState,
-          projectTokenVault: newProjectTokenVault,
-          projectTokenAccount,
-          usdcAccount,
-          projectTokenMint,
+          baseTokenVault: newBaseTokenVault,
+          baseTokenAccount,
+          quoteAccount,
+          quoteMint,
+          baseTokenMint,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -418,19 +422,19 @@ describe('staking-options', () => {
           authority: provider.wallet.publicKey,
           oldState: state,
           newState,
-          oldProjectTokenVault: projectTokenVault,
-          newProjectTokenVault,
+          oldBaseTokenVault: baseTokenVault,
+          newBaseTokenVault,
           tokenProgram: TOKEN_PROGRAM_ID,
         },
       },
     );
 
-    const newProjectTokenVaultAccount = await getTokenAccount(
+    const newBaseTokenVaultAccount = await getTokenAccount(
       provider,
-      newProjectTokenVault,
+      newBaseTokenVault,
     );
     assert.equal(
-      newProjectTokenVaultAccount.amount.toNumber(),
+      newBaseTokenVaultAccount.amount.toNumber(),
       2 * numTokensInPeriod,
     );
   });

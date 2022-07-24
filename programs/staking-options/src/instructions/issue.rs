@@ -2,11 +2,12 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 pub use crate::*;
 
-pub fn issue(ctx: Context<Issue>, amount: u64) -> Result<()> {
+pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
     // Verify the state is at the right address
     check_state!(ctx);
 
-    //check_mint!(ctx, strike);
+    // Verify the mint is at the right address
+    check_mint!(ctx, strike);
 
     // Mint tokens for the user
     let cpi_ctx = CpiContext::new(
@@ -27,7 +28,7 @@ pub fn issue(ctx: Context<Issue>, amount: u64) -> Result<()> {
 }
 
 #[derive(Accounts)]
-#[instruction(amount: u64)]
+#[instruction(amount: u64, strike: u64)]
 pub struct Issue<'info> {
     pub authority: Signer<'info>,
 

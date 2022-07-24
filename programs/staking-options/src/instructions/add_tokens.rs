@@ -17,8 +17,8 @@ pub fn add_tokens(ctx: Context<AddTokens>, num_tokens_to_add: u64) -> Result<()>
     let cpi_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
         token::Transfer {
-            from: ctx.accounts.project_token_account.to_account_info(),
-            to: ctx.accounts.project_token_vault.to_account_info(),
+            from: ctx.accounts.base_token_account.to_account_info(),
+            to: ctx.accounts.base_token_vault.to_account_info(),
             authority: ctx.accounts.authority.to_account_info(),
         },
     );
@@ -43,13 +43,13 @@ pub struct AddTokens<'info> {
     #[account(mut)]
     pub state: Box<Account<'info, State>>,
 
-    /// Where the project tokens are going to be held. Controlled by this program.
+    /// Where the base tokens are going to be held. Controlled by this program.
     #[account(mut)]
-    pub project_token_vault: Box<Account<'info, TokenAccount>>,
+    pub base_token_vault: Box<Account<'info, TokenAccount>>,
 
     /// Where the additional tokens are coming from.
     #[account(mut)]
-    pub project_token_account: Box<Account<'info, TokenAccount>>,
+    pub base_token_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -62,8 +62,8 @@ impl<'info> AddTokens<'info> {
         // Check that the token type matches the mint in the SO state that is
         // getting credited.
         assert_keys_eq!(
-            self.project_token_account.mint,
-            self.state.project_token_mint,
+            self.base_token_account.mint,
+            self.state.base_token_mint,
             WrongMint
         );
 

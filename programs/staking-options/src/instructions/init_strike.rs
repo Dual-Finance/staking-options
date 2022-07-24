@@ -30,12 +30,12 @@ pub struct InitStrike<'info> {
         payer = authority,
         seeds = [SO_MINT_SEED, &state.key().to_bytes(), &strike.to_be_bytes()],
         bump,
-        mint::decimals = state.decimals,
+        mint::decimals = state.base_decimals,
         mint::authority = state.authority)]
     pub option_mint: Account<'info, Mint>,
 
     // TODO: Consider a data account at PDA(mint address) for a reverse lookup
-    // so if you have a token, you can remember the strike and project mint.
+    // so if you have a token, you can remember the strike and base mint.
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,

@@ -23,9 +23,9 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
     );
     anchor_spl::token::burn(burn_ctx, amount)?;
 
-    // Take the USDC payment
-    let payment: u64 =
-        unwrap_int!((unwrap_int!(amount.checked_mul(strike))).checked_div(NUM_ATOMS_PER_USDC));
+    // Take the Quote Token payment
+    let payment: u64 = unwrap_int!((unwrap_int!(amount.checked_mul(strike)))
+        .checked_div(ctx.accounts.state.quote_decimals as u64));
 
     // 3.5% fee.
     let fee: u64 = unwrap_int!(unwrap_int!(payment.checked_mul(35)).checked_div(1_000));
@@ -33,8 +33,8 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             anchor_spl::token::Transfer {
-                from: ctx.accounts.user_usdc_account.to_account_info(),
-                to: ctx.accounts.project_usdc_account.to_account_info(),
+                from: ctx.accounts.user_quote_account.to_account_info(),
+                to: ctx.accounts.project_quote_account.to_account_info(),
                 authority: ctx.accounts.authority.to_account_info().clone(),
             },
         ),
@@ -44,29 +44,29 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             anchor_spl::token::Transfer {
-                from: ctx.accounts.user_usdc_account.to_account_info(),
-                to: ctx.accounts.fee_usdc_account.to_account_info(),
+                from: ctx.accounts.user_quote_account.to_account_info(),
+                to: ctx.accounts.fee_quote_account.to_account_info(),
                 authority: ctx.accounts.authority.to_account_info().clone(),
             },
         ),
         fee,
     )?;
 
-    // Transfer the project tokens
+    // Transfer the base tokens
     let (_so_vault, so_vault_bump) =
         Pubkey::find_program_address(gen_vault_seeds!(ctx), ctx.program_id);
     anchor_spl::token::transfer(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             anchor_spl::token::Transfer {
-                from: ctx.accounts.project_token_vault.to_account_info(),
-                to: ctx.accounts.user_project_token_account.to_account_info(),
-                authority: ctx.accounts.project_token_vault.to_account_info(),
+                from: ctx.accounts.base_token_vault.to_account_info(),
+                to: ctx.accounts.user_base_token_account.to_account_info(),
+                authority: ctx.accounts.base_token_vault.to_account_info(),
             },
             &[&[
                 SO_VAULT_SEED,
                 &ctx.accounts.state.period_num.to_be_bytes(),
-                &ctx.accounts.state.project_token_mint.key().to_bytes(),
+                &ctx.accounts.state.base_token_mint.key().to_bytes(),
                 &[so_vault_bump],
             ]],
         ),
@@ -93,40 +93,40 @@ pub struct Exercise<'info> {
 
     /// Where the payment is coming from.
     #[account(mut)]
-    pub user_usdc_account: Box<Account<'info, TokenAccount>>,
+    pub user_quote_account: Box<Account<'info, TokenAccount>>,
 
     /// Where the payment is going
     #[account(mut)]
-    pub project_usdc_account: Box<Account<'info, TokenAccount>>,
+    pub project_quote_account: Box<Account<'info, TokenAccount>>,
 
     /// Where the fee is going
     #[account(mut)]
-    pub fee_usdc_account: Box<Account<'info, TokenAccount>>,
+    pub fee_quote_account: Box<Account<'info, TokenAccount>>,
 
-    /// The project token location for this SO.
+    /// The base token location for this SO.
     #[account(mut)]
-    pub project_token_vault: Box<Account<'info, TokenAccount>>,
+    pub base_token_vault: Box<Account<'info, TokenAccount>>,
 
-    /// Where the project tokens are going.
+    /// Where the base tokens are going.
     #[account(mut)]
-    pub user_project_token_account: Box<Account<'info, TokenAccount>>,
+    pub user_base_token_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
 
 impl<'info> Exercise<'info> {
     pub fn validate_accounts(&self, _amount: u64, _strike: u64) -> Result<()> {
-        // Verify the address of usdc accounts. Because this account matches,
+        // Verify the address of quote accounts. Because this account matches,
         // the token type will also be verified by the token program.
         assert_keys_eq!(
-            self.state.usdc_account,
-            self.project_usdc_account,
+            self.state.quote_account,
+            self.project_quote_account,
             IncorrectFeeAccount
         );
 
         // Verify that it is owned by DUAL.
         assert_eq!(
-            self.fee_usdc_account.owner.key().to_string(),
+            self.fee_quote_account.owner.key().to_string(),
             "A9YWU67LStgTAYJetbXND2AWqEcvk7FqYJM9nF3VmVpv"
         );
 

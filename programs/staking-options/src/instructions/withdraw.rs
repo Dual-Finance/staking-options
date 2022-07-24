@@ -12,25 +12,25 @@ pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
     // Verify the state is at the right address
     check_state!(ctx);
 
-    // Send project tokens from the vault.
+    // Send base tokens from the vault.
     let (_so_vault, so_vault_bump) =
         Pubkey::find_program_address(gen_vault_seeds!(ctx), ctx.program_id);
     anchor_spl::token::transfer(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             anchor_spl::token::Transfer {
-                from: ctx.accounts.project_token_vault.to_account_info(),
-                to: ctx.accounts.project_token_account.to_account_info(),
-                authority: ctx.accounts.project_token_vault.to_account_info(),
+                from: ctx.accounts.base_token_vault.to_account_info(),
+                to: ctx.accounts.base_token_account.to_account_info(),
+                authority: ctx.accounts.base_token_vault.to_account_info(),
             },
             &[&[
                 SO_VAULT_SEED,
                 &ctx.accounts.state.period_num.to_be_bytes(),
-                &ctx.accounts.state.project_token_mint.key().to_bytes(),
+                &ctx.accounts.state.base_token_mint.key().to_bytes(),
                 &[so_vault_bump],
             ]],
         ),
-        ctx.accounts.project_token_vault.amount,
+        ctx.accounts.base_token_vault.amount,
     )?;
 
     Ok(())
@@ -46,13 +46,13 @@ pub struct Withdraw<'info> {
     #[account(mut, close=authority)]
     pub state: Box<Account<'info, State>>,
 
-    /// The project token location
+    /// The base token location
     #[account(mut)]
-    pub project_token_vault: Box<Account<'info, TokenAccount>>,
+    pub base_token_vault: Box<Account<'info, TokenAccount>>,
 
     /// Where the tokens are getting returned to
     #[account(mut)]
-    pub project_token_account: Box<Account<'info, TokenAccount>>,
+    pub base_token_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
