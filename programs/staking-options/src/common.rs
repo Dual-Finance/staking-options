@@ -41,6 +41,7 @@ pub struct State {
     // The account that will receive payments on the options.
     pub quote_account: Pubkey,
 
-    // Vector of all strikes for an SO. Limit 100. For monitoring only. A strike is number of USDC atoms per full base token.
+    // Vector of all strikes for an SO. Limit 100. For monitoring only. A strike
+    // is number of quote atoms per full base token.
     pub strikes: Vec<u64>,
 }
