@@ -21,17 +21,18 @@ pub fn config(
     ctx.accounts.state.options_available = num_tokens_in_period;
     ctx.accounts.state.option_expiration = option_expiration;
     ctx.accounts.state.subscription_period_end = subscription_period_end;
-    ctx.accounts.state.decimals = ctx.accounts.project_token_mint.decimals;
-    ctx.accounts.state.project_token_mint = ctx.accounts.project_token_mint.key();
-    ctx.accounts.state.usdc_account = ctx.accounts.usdc_account.key();
+    ctx.accounts.state.base_decimals = ctx.accounts.base_token_mint.decimals;
+    ctx.accounts.state.quote_decimals = ctx.accounts.quote_mint.decimals;
+    ctx.accounts.state.base_token_mint = ctx.accounts.base_token_mint.key();
+    ctx.accounts.state.quote_account = ctx.accounts.quote_account.key();
     // Do not need to initialize strikes as empty vector.
 
     // Take tokens that will back the options.
     let cpi_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
         token::Transfer {
-            from: ctx.accounts.project_token_account.to_account_info(),
-            to: ctx.accounts.project_token_vault.to_account_info(),
+            from: ctx.accounts.base_token_account.to_account_info(),
+            to: ctx.accounts.base_token_vault.to_account_info(),
             authority: ctx.accounts.authority.to_account_info(),
         },
     );
@@ -55,7 +56,7 @@ pub struct Config<'info> {
     #[account(
         init,
         payer = authority,
-        seeds = [SO_CONFIG_SEED, so_name.as_bytes(), &period_num.to_be_bytes(), &project_token_mint.key().to_bytes()],
+        seeds = [SO_CONFIG_SEED, so_name.as_bytes(), &period_num.to_be_bytes(), &base_token_mint.key().to_bytes()],
         bump,
         space =
           8 +     // discriminator
@@ -66,35 +67,37 @@ pub struct Config<'info> {
           8 +     // option_expiration
           8 +     // subscription_period_end
           1 +     // decimals
-          32 +    // project_token_mint 
-          32 +    // usdc_account 
+          32 +    // base_token_mint 
+          32 +    // quote_account 
           8 +     // strikes overhead
           8 * 100 // strikes
     )]
     pub state: Box<Account<'info, State>>,
 
-    /// Where the project tokens are going to be held.
+    /// Where the base tokens are going to be held.
     /// This is not an ATA because this should be separate for each period, not
     /// one owned by this program.
     #[account(
         init,
         payer = authority,
-        seeds = [SO_VAULT_SEED, &period_num.to_be_bytes(), &project_token_mint.key().to_bytes()],
+        seeds = [SO_VAULT_SEED, &period_num.to_be_bytes(), &base_token_mint.key().to_bytes()],
         bump,
-        token::mint = project_token_mint,
-        token::authority = project_token_vault)]
-    pub project_token_vault: Box<Account<'info, TokenAccount>>,
+        token::mint = base_token_mint,
+        token::authority = base_token_vault)]
+    pub base_token_vault: Box<Account<'info, TokenAccount>>,
 
     /// Where the tokens are coming from.
     #[account(mut)]
-    pub project_token_account: Box<Account<'info, TokenAccount>>,
+    pub base_token_account: Box<Account<'info, TokenAccount>>,
 
     /// Saved for later. Not used. TokenAccount instead of AccountInfo in order
     /// to get the anchor type checking.
-    pub usdc_account: Box<Account<'info, TokenAccount>>,
+    pub quote_account: Box<Account<'info, TokenAccount>>,
 
-    /// Mint of project tokens.
-    pub project_token_mint: Box<Account<'info, Mint>>,
+    /// Mint of base tokens.
+    pub base_token_mint: Box<Account<'info, Mint>>,
+    /// Mint of quote tokens. Needed for storing the number of decimals.
+    pub quote_mint: Box<Account<'info, Mint>>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -110,10 +113,8 @@ impl<'info> Config<'info> {
         _num_tokens_in_period: u64,
     ) -> Result<()> {
         // Verify the type of token matches input
-        assert_keys_eq!(
-            self.project_token_mint,
-            self.project_token_account.mint.key()
-        );
+        assert_keys_eq!(self.base_token_mint, self.base_token_account.mint.key());
+        assert_keys_eq!(self.quote_mint, self.quote_account.mint.key());
 
         // period_num should be increasing, but not necessarily required.
         // num_tokens_in_period is verified by the token program doing the transfer.
@@ -122,7 +123,7 @@ impl<'info> Config<'info> {
         check_not_expired!(option_expiration);
         check_not_expired!(subscription_period_end);
 
-        // Cannot verify the token type of the usdc_account because it could be
+        // Cannot verify the token type of the quote_account because it could be
         // something else for downside SO.
 
         Ok(())

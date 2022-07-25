@@ -29,15 +29,19 @@ pub struct State {
     // Seconds since unix epoch for subscription period end.
     pub subscription_period_end: u64,
 
-    // Number of decimals for the project token as well as SO.
-    pub decimals: u8,
+    // Number of decimals for the base token as well as SO.
+    pub base_decimals: u8,
+
+    // Number of decimals for the quote token.
+    pub quote_decimals: u8,
 
     // Mint of the reward token
-    pub project_token_mint: Pubkey,
+    pub base_token_mint: Pubkey,
 
     // The account that will receive payments on the options.
-    pub usdc_account: Pubkey,
+    pub quote_account: Pubkey,
 
-    // Vector of all strikes for an SO. Limit 100. For monitoring only. A strike is number of USDC atoms per full project token.
+    // Vector of all strikes for an SO. Limit 100. For monitoring only. A strike
+    // is number of quote atoms per full base token.
     pub strikes: Vec<u64>,
 }

@@ -65,8 +65,8 @@ pub mod staking_options {
     }
 
     #[access_control(ctx.accounts.validate_accounts(amount))]
-    pub fn issue(ctx: Context<Issue>, amount: u64) -> Result<()> {
-        issue::issue(ctx, amount)
+    pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
+        issue::issue(ctx, amount, strike)
     }
 
     #[access_control(ctx.accounts.validate_accounts())]
