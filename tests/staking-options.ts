@@ -90,6 +90,7 @@ describe('staking-options', () => {
       await anchor.web3.PublicKey.findProgramAddress(
         [
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
+          Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
           toBeBytes(periodNum),
           baseTokenMint.toBuffer(),
         ],
@@ -379,6 +380,7 @@ describe('staking-options', () => {
       await anchor.web3.PublicKey.findProgramAddress(
         [
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
+          Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
           toBeBytes(newPeriodNum),
           baseTokenMint.toBuffer(),
         ],

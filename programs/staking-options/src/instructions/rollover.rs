@@ -38,6 +38,7 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
     let (_old_so_vault, old_so_vault_bump) = Pubkey::find_program_address(
         &[
             SO_VAULT_SEED,
+            &ctx.accounts.old_state.so_name.as_bytes(),
             &ctx.accounts.old_state.period_num.to_be_bytes(),
             &ctx.accounts.old_state.base_token_mint.key().to_bytes(),
         ],
@@ -53,6 +54,7 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
             },
             &[&[
                 SO_VAULT_SEED,
+                &ctx.accounts.old_state.so_name.as_bytes(),
                 &ctx.accounts.old_state.period_num.to_be_bytes(),
                 &ctx.accounts.old_state.base_token_mint.key().to_bytes(),
                 &[old_so_vault_bump],

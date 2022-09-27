@@ -25,6 +25,7 @@ pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
             },
             &[&[
                 SO_VAULT_SEED,
+                &ctx.accounts.state.so_name.as_bytes(),
                 &ctx.accounts.state.period_num.to_be_bytes(),
                 &ctx.accounts.state.base_token_mint.key().to_bytes(),
                 &[so_vault_bump],

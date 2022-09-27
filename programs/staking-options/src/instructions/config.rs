@@ -80,7 +80,7 @@ pub struct Config<'info> {
     #[account(
         init,
         payer = authority,
-        seeds = [SO_VAULT_SEED, &period_num.to_be_bytes(), &base_token_mint.key().to_bytes()],
+        seeds = [SO_VAULT_SEED, so_name.as_bytes(), &period_num.to_be_bytes(), &base_token_mint.key().to_bytes()],
         bump,
         token::mint = base_token_mint,
         token::authority = base_token_vault)]
