@@ -61,11 +61,7 @@ impl<'info> AddTokens<'info> {
 
         // Check that the token type matches the mint in the SO state that is
         // getting credited.
-        assert_keys_eq!(
-            self.base_account.mint,
-            self.state.base_mint,
-            WrongMint
-        );
+        assert_keys_eq!(self.base_account.mint, self.state.base_mint, WrongMint);
 
         // Do not allow adding tokens to an SO that is expired already.
         check_not_expired!(self.state.subscription_period_end);
