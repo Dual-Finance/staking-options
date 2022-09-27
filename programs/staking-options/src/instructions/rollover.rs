@@ -11,7 +11,7 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
             SO_CONFIG_SEED,
             &ctx.accounts.old_state.so_name.as_bytes(),
             &ctx.accounts.old_state.period_num.to_be_bytes(),
-            &ctx.accounts.old_state.base_token_mint.key().to_bytes(),
+            &ctx.accounts.old_state.base_mint.key().to_bytes(),
         ],
         ctx.program_id,
     );
@@ -20,7 +20,7 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
             SO_CONFIG_SEED,
             &ctx.accounts.new_state.so_name.as_bytes(),
             &ctx.accounts.new_state.period_num.to_be_bytes(),
-            &ctx.accounts.new_state.base_token_mint.key().to_bytes(),
+            &ctx.accounts.new_state.base_mint.key().to_bytes(),
         ],
         ctx.program_id,
     );
@@ -40,7 +40,7 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
             SO_VAULT_SEED,
             &ctx.accounts.old_state.so_name.as_bytes(),
             &ctx.accounts.old_state.period_num.to_be_bytes(),
-            &ctx.accounts.old_state.base_token_mint.key().to_bytes(),
+            &ctx.accounts.old_state.base_mint.key().to_bytes(),
         ],
         ctx.program_id,
     );
@@ -48,15 +48,15 @@ pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             anchor_spl::token::Transfer {
-                from: ctx.accounts.old_base_token_vault.to_account_info(),
-                to: ctx.accounts.new_base_token_vault.to_account_info(),
-                authority: ctx.accounts.old_base_token_vault.to_account_info(),
+                from: ctx.accounts.old_base_vault.to_account_info(),
+                to: ctx.accounts.new_base_vault.to_account_info(),
+                authority: ctx.accounts.old_base_vault.to_account_info(),
             },
             &[&[
                 SO_VAULT_SEED,
                 &ctx.accounts.old_state.so_name.as_bytes(),
                 &ctx.accounts.old_state.period_num.to_be_bytes(),
-                &ctx.accounts.old_state.base_token_mint.key().to_bytes(),
+                &ctx.accounts.old_state.base_mint.key().to_bytes(),
                 &[old_so_vault_bump],
             ]],
         ),
@@ -87,11 +87,11 @@ pub struct Rollover<'info> {
 
     /// The base token location
     #[account(mut)]
-    pub old_base_token_vault: Box<Account<'info, TokenAccount>>,
+    pub old_base_vault: Box<Account<'info, TokenAccount>>,
 
     /// The base token location
     #[account(mut)]
-    pub new_base_token_vault: Box<Account<'info, TokenAccount>>,
+    pub new_base_vault: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -105,8 +105,8 @@ impl<'info> Rollover<'info> {
             InvalidState
         );
         assert_keys_eq!(
-            self.new_state.base_token_mint.key(),
-            self.old_state.base_token_mint.key(),
+            self.new_state.base_mint.key(),
+            self.old_state.base_mint.key(),
             InvalidState
         );
 

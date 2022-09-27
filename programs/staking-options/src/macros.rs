@@ -25,7 +25,7 @@ macro_rules! check_state {
                 SO_CONFIG_SEED,
                 &$ctx.accounts.state.so_name.as_bytes(),
                 &$ctx.accounts.state.period_num.to_be_bytes(),
-                &$ctx.accounts.state.base_token_mint.key().to_bytes(),
+                &$ctx.accounts.state.base_mint.key().to_bytes(),
             ],
             $ctx.program_id,
         );
@@ -42,13 +42,13 @@ macro_rules! check_vault {
                 SO_VAULT_SEED,
                 &$ctx.accounts.state.so_name.as_bytes(),
                 &$ctx.accounts.state.period_num.to_be_bytes(),
-                &$ctx.accounts.state.base_token_mint.key().to_bytes(),
+                &$ctx.accounts.state.base_mint.key().to_bytes(),
             ],
             $ctx.program_id,
         );
 
         assert_keys_eq!(
-            $ctx.accounts.base_token_vault.key(),
+            $ctx.accounts.base_vault.key(),
             expected_vault,
             InvalidVault
         );
@@ -77,7 +77,7 @@ macro_rules! gen_vault_seeds {
         &[
             SO_VAULT_SEED,
             &$ctx.accounts.state.period_num.to_be_bytes(),
-            &$ctx.accounts.state.base_token_mint.key().to_bytes(),
+            &$ctx.accounts.state.base_mint.key().to_bytes(),
         ]
     };
 }

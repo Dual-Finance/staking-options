@@ -59,15 +59,15 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             anchor_spl::token::Transfer {
-                from: ctx.accounts.base_token_vault.to_account_info(),
-                to: ctx.accounts.user_base_token_account.to_account_info(),
-                authority: ctx.accounts.base_token_vault.to_account_info(),
+                from: ctx.accounts.base_vault.to_account_info(),
+                to: ctx.accounts.user_base_account.to_account_info(),
+                authority: ctx.accounts.base_vault.to_account_info(),
             },
             &[&[
                 SO_VAULT_SEED,
                 &ctx.accounts.state.so_name.as_bytes(),
                 &ctx.accounts.state.period_num.to_be_bytes(),
-                &ctx.accounts.state.base_token_mint.key().to_bytes(),
+                &ctx.accounts.state.base_mint.key().to_bytes(),
                 &[so_vault_bump],
             ]],
         ),
@@ -106,11 +106,11 @@ pub struct Exercise<'info> {
 
     /// The base token location for this SO.
     #[account(mut)]
-    pub base_token_vault: Box<Account<'info, TokenAccount>>,
+    pub base_vault: Box<Account<'info, TokenAccount>>,
 
     /// Where the base tokens are going.
     #[account(mut)]
-    pub user_base_token_account: Box<Account<'info, TokenAccount>>,
+    pub user_base_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -128,7 +128,7 @@ impl<'info> Exercise<'info> {
         // Verify that it is owned by DUAL.
         assert_eq!(
             self.fee_quote_account.owner.key().to_string(),
-            "A9YWU67LStgTAYJetbXND2AWqEcvk7FqYJM9nF3VmVpv"
+            "CZqTD3b3oQw8cDK4CBddpKF6epA1fR36GBbvU5VBt2Dz"
         );
 
         // Verify expiration

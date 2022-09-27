@@ -3,9 +3,6 @@ use anchor_lang::prelude::*;
 pub const SO_CONFIG_SEED: &[u8] = b"so-config";
 pub const SO_VAULT_SEED: &[u8] = b"so-vault";
 pub const SO_MINT_SEED: &[u8] = b"so-mint";
-pub const SO_USDC_SEED: &[u8] = b"so-usdc";
-
-pub const NUM_ATOMS_PER_USDC: u64 = 1_000_000;
 
 #[account]
 pub struct State {
@@ -35,8 +32,8 @@ pub struct State {
     // Number of decimals for the quote token.
     pub quote_decimals: u8,
 
-    // Mint of the reward token
-    pub base_token_mint: Pubkey,
+    // Mint of the project token
+    pub base_mint: Pubkey,
 
     // The account that will receive payments on the options.
     pub quote_account: Pubkey,

@@ -19,19 +19,19 @@ pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             anchor_spl::token::Transfer {
-                from: ctx.accounts.base_token_vault.to_account_info(),
-                to: ctx.accounts.base_token_account.to_account_info(),
-                authority: ctx.accounts.base_token_vault.to_account_info(),
+                from: ctx.accounts.base_vault.to_account_info(),
+                to: ctx.accounts.base_account.to_account_info(),
+                authority: ctx.accounts.base_vault.to_account_info(),
             },
             &[&[
                 SO_VAULT_SEED,
                 &ctx.accounts.state.so_name.as_bytes(),
                 &ctx.accounts.state.period_num.to_be_bytes(),
-                &ctx.accounts.state.base_token_mint.key().to_bytes(),
+                &ctx.accounts.state.base_mint.key().to_bytes(),
                 &[so_vault_bump],
             ]],
         ),
-        ctx.accounts.base_token_vault.amount,
+        ctx.accounts.base_vault.amount,
     )?;
 
     Ok(())
@@ -49,11 +49,11 @@ pub struct Withdraw<'info> {
 
     /// The base token location
     #[account(mut)]
-    pub base_token_vault: Box<Account<'info, TokenAccount>>,
+    pub base_vault: Box<Account<'info, TokenAccount>>,
 
     /// Where the tokens are getting returned to
     #[account(mut)]
-    pub base_token_account: Box<Account<'info, TokenAccount>>,
+    pub base_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
