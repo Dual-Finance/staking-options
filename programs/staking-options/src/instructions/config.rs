@@ -24,6 +24,7 @@ pub fn config(
     ctx.accounts.state.base_decimals = ctx.accounts.base_mint.decimals;
     ctx.accounts.state.quote_decimals = ctx.accounts.quote_mint.decimals;
     ctx.accounts.state.base_mint = ctx.accounts.base_mint.key();
+    ctx.accounts.state.quote_mint = ctx.accounts.quote_mint.key();
     ctx.accounts.state.quote_account = ctx.accounts.quote_account.key();
     // Do not need to initialize strikes as empty vector.
 
@@ -68,6 +69,7 @@ pub struct Config<'info> {
           8 +     // subscription_period_end
           1 +     // decimals
           32 +    // base_mint 
+          32 +    // quote_mint 
           32 +    // quote_account 
           8 +     // strikes overhead
           8 * 100 // strikes

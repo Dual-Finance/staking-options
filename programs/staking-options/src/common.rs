@@ -35,6 +35,9 @@ pub struct State {
     // Mint of the project token
     pub base_mint: Pubkey,
 
+    // Mint of the quote token
+    pub quote_mint: Pubkey,
+
     // The account that will receive payments on the options.
     pub quote_account: Pubkey,
 
