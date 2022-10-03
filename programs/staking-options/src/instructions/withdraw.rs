@@ -64,7 +64,7 @@ impl<'info> Withdraw<'info> {
         // Verify the authority to init strike against the state authority
         assert_keys_eq!(self.authority, self.state.authority);
 
-        // Verify that it is not already expired
+        // Verify that it is already expired
         check_expired!(self.state.option_expiration);
 
         Ok(())
