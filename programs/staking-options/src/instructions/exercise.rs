@@ -25,7 +25,7 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
 
     // Take the Quote Token payment
     let payment: u64 = unwrap_int!((unwrap_int!(amount.checked_mul(strike)))
-        .checked_div(ctx.accounts.state.quote_decimals as u64));
+        .checked_div(u64::pow(10, ctx.accounts.state.quote_decimals as u32)));
 
     // 3.5% fee.
     let fee: u64 = unwrap_int!(unwrap_int!(payment.checked_mul(35)).checked_div(1_000));

@@ -3,6 +3,8 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 pub use crate::*;
 
 pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
+    // TODO: Log the state
+
     // Verify the state is at the right address
     check_state!(ctx);
 
@@ -55,9 +57,7 @@ impl<'info> Issue<'info> {
         check_not_expired!(self.state.subscription_period_end);
 
         // Make sure there are enough tokens to back the options.
-        invariant!(self.state.options_available > amount, NotEnoughTokens);
-
-        // TODO: Check the SO mint
+        invariant!(self.state.options_available >= amount, NotEnoughTokens);
 
         // Do not need to verify the SO mint is at the right address. The
         // authority check is sufficient. If a different mint was somehow
