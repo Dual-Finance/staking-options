@@ -40,8 +40,7 @@ describe('staking-options', () => {
 
   let optionExpiration: number;
   let subscriptionPeriodEnd: number;
-  const periodNum: number = 0;
-  const numTokensInPeriod: number = 1_000_000_000;
+  const numTokens: number = 1_000_000_000;
   const STRIKE: number = 1_000;
   const OPTIONS_AMOUNT: number = 1_000;
   const SO_NAME: string = 'SO';
@@ -62,7 +61,7 @@ describe('staking-options', () => {
       provider,
       baseMint,
       baseAccount,
-      numTokensInPeriod,
+      numTokens,
       provider.wallet.publicKey,
     );
     if (!quoteMint) {
@@ -79,7 +78,6 @@ describe('staking-options', () => {
         [
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_CONFIG_SEED)),
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
-          toBeBytes(periodNum),
           baseMint.toBuffer(),
         ],
         program.programId,
@@ -91,7 +89,6 @@ describe('staking-options', () => {
         [
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
           Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
-          toBeBytes(periodNum),
           baseMint.toBuffer(),
         ],
         program.programId,
@@ -99,10 +96,9 @@ describe('staking-options', () => {
     baseVault = _baseVault;
 
     await program.rpc.config(
-      new anchor.BN(periodNum),
       new anchor.BN(optionExpiration),
       new anchor.BN(subscriptionPeriodEnd),
-      new anchor.BN(numTokensInPeriod),
+      new anchor.BN(numTokens),
       SO_NAME,
       {
         accounts: {
@@ -182,7 +178,7 @@ describe('staking-options', () => {
       provider,
       baseMint,
       baseAccount,
-      numTokensInPeriod,
+      numTokens,
       provider.wallet.publicKey,
     );
 
@@ -270,9 +266,8 @@ describe('staking-options', () => {
 
     // Verify the State.
     const stateObj = await program.account.state.fetch(state);
-    assert.equal(stateObj.periodNum.toNumber(), 0);
     assert.equal(stateObj.authority.toBase58(), provider.wallet.publicKey.toBase58());
-    assert.equal(stateObj.optionsAvailable.toNumber(), numTokensInPeriod);
+    assert.equal(stateObj.optionsAvailable.toNumber(), numTokens);
     assert.equal(stateObj.optionExpiration.toNumber(), optionExpiration);
     assert.equal(stateObj.subscriptionPeriodEnd.toNumber(), subscriptionPeriodEnd);
     assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
@@ -286,7 +281,7 @@ describe('staking-options', () => {
       provider,
       baseVault,
     );
-    assert.equal(baseVaultAccount.amount.toNumber(), numTokensInPeriod);
+    assert.equal(baseVaultAccount.amount.toNumber(), numTokens);
   });
 
   it('InitStrike Success', async () => {
@@ -319,7 +314,7 @@ describe('staking-options', () => {
       provider,
       baseVault,
     );
-    assert.equal(baseVaultAccount.amount.toNumber(), numTokensInPeriod + OPTIONS_AMOUNT);
+    assert.equal(baseVaultAccount.amount.toNumber(), numTokens + OPTIONS_AMOUNT);
   });
 
   it('Exercise Success', async () => {
@@ -354,100 +349,11 @@ describe('staking-options', () => {
       );
       assert.equal(
         userBaseAccountAccount.amount.toNumber(),
-        numTokensInPeriod - OPTIONS_AMOUNT,
+        numTokens - OPTIONS_AMOUNT,
       );
     } catch (err) {
       console.log(err);
       assert(false);
     }
-  });
-
-  it('Rollover Success', async () => {
-    await configureSO();
-
-    // Rollover again
-    await mintToAccount(
-      provider,
-      baseMint,
-      baseAccount,
-      numTokensInPeriod,
-      provider.wallet.publicKey,
-    );
-    const newPeriodNum = 1;
-
-    const [newState, _stateBump] = (
-      await anchor.web3.PublicKey.findProgramAddress(
-        [
-          Buffer.from(anchor.utils.bytes.utf8.encode(SO_CONFIG_SEED)),
-          Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
-          toBeBytes(newPeriodNum),
-          baseMint.toBuffer(),
-        ],
-        program.programId,
-      ));
-
-    const [newBaseVault, _baseVaultBump] = (
-      await anchor.web3.PublicKey.findProgramAddress(
-        [
-          Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
-          Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
-          toBeBytes(newPeriodNum),
-          baseMint.toBuffer(),
-        ],
-        program.programId,
-      ));
-
-    // Wait for the old one to expire.
-    await new Promise((r) => setTimeout(r, 100_000));
-
-    optionExpiration = Math.floor(Date.now() / 1000 + 2000);
-    subscriptionPeriodEnd = optionExpiration;
-
-    console.log('Config again');
-    await program.rpc.config(
-      new anchor.BN(newPeriodNum),
-      new anchor.BN(optionExpiration),
-      new anchor.BN(subscriptionPeriodEnd),
-      new anchor.BN(numTokensInPeriod),
-      SO_NAME,
-      {
-        accounts: {
-          authority: provider.wallet.publicKey,
-          soAuthority: provider.wallet.publicKey,
-          state: newState,
-          baseVault: newBaseVault,
-          baseAccount,
-          quoteAccount,
-          quoteMint,
-          baseMint,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        },
-      },
-    );
-
-    console.log('Rolling over');
-    await program.rpc.rollover(
-      {
-        accounts: {
-          authority: provider.wallet.publicKey,
-          oldState: state,
-          newState,
-          oldBaseVault: baseVault,
-          newBaseVault,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        },
-      },
-    );
-
-    const newBaseTokenVaultAccount = await getTokenAccount(
-      provider,
-      newBaseVault,
-    );
-    assert.equal(
-      newBaseTokenVaultAccount.amount.toNumber(),
-      2 * numTokensInPeriod,
-    );
   });
 });

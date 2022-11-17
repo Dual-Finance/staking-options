@@ -3,12 +3,6 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 pub use crate::*;
 
 pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> {
-    // Verify the state is at the right PDA
-    check_state!(ctx);
-
-    // Verify the vault is correct.
-    check_vault!(ctx);
-
     // Verify the mint is correct.
     check_mint!(ctx, strike);
 
@@ -53,8 +47,6 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
     )?;
 
     // Transfer the base tokens
-    let (_so_vault, so_vault_bump) =
-        Pubkey::find_program_address(gen_vault_seeds!(ctx), ctx.program_id);
     anchor_spl::token::transfer(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -66,9 +58,8 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
             &[&[
                 SO_VAULT_SEED,
                 &ctx.accounts.state.so_name.as_bytes(),
-                &ctx.accounts.state.period_num.to_be_bytes(),
                 &ctx.accounts.state.base_mint.key().to_bytes(),
-                &[so_vault_bump],
+                &[ctx.accounts.state.vault_bump],
             ]],
         ),
         amount,
@@ -83,6 +74,14 @@ pub struct Exercise<'info> {
     pub authority: Signer<'info>,
 
     /// State holding all the data for the stake that the staker wants to do.
+    #[account(mut,
+        seeds = [
+            SO_CONFIG_SEED,
+            state.so_name.as_bytes(),
+            &state.base_mint.key().to_bytes()
+        ],
+        bump = state.state_bump
+    )]
     pub state: Box<Account<'info, State>>,
 
     /// Where the SO are coming from.
@@ -105,7 +104,10 @@ pub struct Exercise<'info> {
     pub fee_quote_account: Box<Account<'info, TokenAccount>>,
 
     /// The base token location for this SO.
-    #[account(mut)]
+    #[account(mut,
+        seeds = [SO_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
+        bump = state.vault_bump,
+    )]
     pub base_vault: Box<Account<'info, TokenAccount>>,
 
     /// Where the base tokens are going.

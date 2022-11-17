@@ -5,14 +5,6 @@ use vipers::prelude::*;
 use crate::*;
 
 pub fn add_tokens(ctx: Context<AddTokens>, num_tokens_to_add: u64) -> Result<()> {
-    // Verify the SO state is correct.
-    check_state!(ctx);
-
-    // Verify that the state that is getting credited with tokens has the
-    // same vault so that a user cannot maliciously get the vaults out of
-    // sync.
-    check_vault!(ctx);
-
     // Move tokens from the depositor to the vault.
     let cpi_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -40,11 +32,21 @@ pub struct AddTokens<'info> {
     pub authority: Signer<'info>,
 
     /// State holding all the data for the intended stake.
-    #[account(mut)]
+    #[account(mut,
+        seeds = [
+            SO_CONFIG_SEED,
+            state.so_name.as_bytes(),
+            &state.base_mint.key().to_bytes()
+        ],
+        bump = state.state_bump
+    )]
     pub state: Box<Account<'info, State>>,
 
     /// Where the base tokens are going to be held. Controlled by this program.
-    #[account(mut)]
+    #[account(mut,
+        seeds = [SO_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
+        bump = state.vault_bump,
+    )]
     pub base_vault: Box<Account<'info, TokenAccount>>,
 
     /// Where the additional tokens are coming from.
@@ -65,10 +67,6 @@ impl<'info> AddTokens<'info> {
 
         // Do not allow adding tokens to an SO that is expired already.
         check_not_expired!(self.state.subscription_period_end);
-
-        // Adding tokens does not require an authority check because the only
-        // authority that matters is that the source of the tokens is fine
-        // and that is checked by the token program.
 
         Ok(())
     }

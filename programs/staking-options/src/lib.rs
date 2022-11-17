@@ -35,21 +35,19 @@ pub mod staking_options {
         add_tokens::add_tokens(ctx, num_tokens_to_add)
     }
 
-    #[access_control(ctx.accounts.validate_accounts(period_num, option_expiration, subscription_period_end, num_tokens_in_period))]
+    #[access_control(ctx.accounts.validate_accounts(option_expiration, subscription_period_end, num_tokens))]
     pub fn config(
         ctx: Context<Config>,
-        period_num: u64,
         option_expiration: u64,
         subscription_period_end: u64,
-        num_tokens_in_period: u64,
+        num_tokens: u64,
         so_name: String,
     ) -> Result<()> {
         config::config(
             ctx,
-            period_num,
             option_expiration,
             subscription_period_end,
-            num_tokens_in_period,
+            num_tokens,
             so_name,
         )
     }
@@ -67,11 +65,6 @@ pub mod staking_options {
     #[access_control(ctx.accounts.validate_accounts(amount))]
     pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
         issue::issue(ctx, amount, strike)
-    }
-
-    #[access_control(ctx.accounts.validate_accounts())]
-    pub fn rollover(ctx: Context<Rollover>) -> Result<()> {
-        rollover::rollover(ctx)
     }
 
     #[access_control(ctx.accounts.validate_accounts())]

@@ -10,9 +10,6 @@ pub struct State {
     // token, which is especially useful for downside SO.
     pub so_name: String,
 
-    // For identifying the SO within the same SO name.
-    pub period_num: u64,
-
     // Authority is required to sign all issuing and withdrawing. Should be a
     // PDA or owner of the project.
     pub authority: Pubkey,
@@ -44,4 +41,7 @@ pub struct State {
     // Vector of all strikes for an SO. Limit 100. For monitoring only. A strike
     // is number of quote atoms per full base token.
     pub strikes: Vec<u64>,
+
+    pub state_bump: u8,
+    pub vault_bump: u8,
 }

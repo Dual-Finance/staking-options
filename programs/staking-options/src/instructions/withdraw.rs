@@ -5,16 +5,7 @@ use vipers::prelude::*;
 pub use crate::common::*;
 
 pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
-    // Verify the token types match so you cannot withdraw from a different
-    // vault.
-    check_vault!(ctx);
-
-    // Verify the state is at the right address
-    check_state!(ctx);
-
     // Send base tokens from the vault.
-    let (_so_vault, so_vault_bump) =
-        Pubkey::find_program_address(gen_vault_seeds!(ctx), ctx.program_id);
     anchor_spl::token::transfer(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -26,9 +17,8 @@ pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
             &[&[
                 SO_VAULT_SEED,
                 &ctx.accounts.state.so_name.as_bytes(),
-                &ctx.accounts.state.period_num.to_be_bytes(),
                 &ctx.accounts.state.base_mint.key().to_bytes(),
-                &[so_vault_bump],
+                &[ctx.accounts.state.vault_bump],
             ]],
         ),
         ctx.accounts.base_vault.amount,
@@ -44,11 +34,22 @@ pub struct Withdraw<'info> {
     pub authority: Signer<'info>,
 
     /// State holding all the data for the stake that the staker wants to do.
-    #[account(mut, close=authority)]
+    #[account(mut,
+        close=authority,
+        seeds = [
+            SO_CONFIG_SEED,
+            state.so_name.as_bytes(),
+            &state.base_mint.key().to_bytes()
+        ],
+        bump = state.state_bump
+    )]
     pub state: Box<Account<'info, State>>,
 
     /// The base token location
-    #[account(mut)]
+    #[account(mut,
+        seeds = [SO_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
+        bump = state.vault_bump,
+    )]
     pub base_vault: Box<Account<'info, TokenAccount>>,
 
     /// Where the tokens are getting returned to
