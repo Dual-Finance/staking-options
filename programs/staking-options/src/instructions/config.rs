@@ -8,6 +8,7 @@ pub fn config(
     option_expiration: u64,
     subscription_period_end: u64,
     num_tokens: u64,
+    lot_size: u64,
     so_name: String,
 ) -> Result<()> {
     // Verify the SO name is a reasonable length.
@@ -24,6 +25,7 @@ pub fn config(
     ctx.accounts.state.base_mint = ctx.accounts.base_mint.key();
     ctx.accounts.state.quote_mint = ctx.accounts.quote_mint.key();
     ctx.accounts.state.quote_account = ctx.accounts.quote_account.key();
+    ctx.accounts.state.lot_size = lot_size;
     // Do not need to initialize strikes as empty vector.
 
     ctx.accounts.state.state_bump = *ctx.bumps.get("state").unwrap();
@@ -44,7 +46,7 @@ pub fn config(
 }
 
 #[derive(Accounts)]
-#[instruction(option_expiration: u64, subscription_period_end: u64, num_tokens: u64, so_name: String)]
+#[instruction(option_expiration: u64, subscription_period_end: u64, num_tokens: u64, lot_size: u64, so_name: String)]
 pub struct Config<'info> {
     /// Does not have to match the authority for the SO State, but it can.
     #[account(mut)]
@@ -61,18 +63,21 @@ pub struct Config<'info> {
         seeds = [SO_CONFIG_SEED, so_name.as_bytes(), &base_mint.key().to_bytes()],
         bump,
         space =
-          8 +     // discriminator
-          64 +    // so_name
-          32 +    // authority
-          8 +     // options_available
-          8 +     // option_expiration
-          8 +     // subscription_period_end
-          1 +     // decimals
-          32 +    // base_mint 
-          32 +    // quote_mint 
-          32 +    // quote_account 
-          8 +     // strikes overhead
-          8 * 100 // strikes
+          8 +       // discriminator
+          64 +      // so_name
+          32 +      // authority
+          8 +       // options_available
+          8 +       // option_expiration
+          8 +       // subscription_period_end
+          8 +       // decimals
+          32 +      // base_mint 
+          32 +      // quote_mint 
+          32 +      // quote_account 
+          8 +       // lot size
+          1 + 1 +   // bumps
+          8 +       // strikes overhead
+          8 * 100 + // strikes
+          100       // unused bytes for future upgrades
     )]
     pub state: Box<Account<'info, State>>,
 
@@ -109,7 +114,6 @@ impl<'info> Config<'info> {
         &self,
         option_expiration: u64,
         subscription_period_end: u64,
-        _num_tokens_in_period: u64,
     ) -> Result<()> {
         // Verify the type of token matches input
         assert_keys_eq!(self.base_mint, self.base_account.mint.key());

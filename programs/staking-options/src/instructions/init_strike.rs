@@ -37,8 +37,6 @@ pub struct InitStrike<'info> {
         mint::authority = state.authority)]
     pub option_mint: Account<'info, Mint>,
 
-    // TODO: Consider a data account at PDA(mint address) for a reverse lookup
-    // so if you have a token, you can remember the strike and base mint.
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,

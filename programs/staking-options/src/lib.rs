@@ -35,12 +35,13 @@ pub mod staking_options {
         add_tokens::add_tokens(ctx, num_tokens_to_add)
     }
 
-    #[access_control(ctx.accounts.validate_accounts(option_expiration, subscription_period_end, num_tokens))]
+    #[access_control(ctx.accounts.validate_accounts(option_expiration, subscription_period_end))]
     pub fn config(
         ctx: Context<Config>,
         option_expiration: u64,
         subscription_period_end: u64,
         num_tokens: u64,
+        lot_size: u64,
         so_name: String,
     ) -> Result<()> {
         config::config(
@@ -48,6 +49,7 @@ pub mod staking_options {
             option_expiration,
             subscription_period_end,
             num_tokens,
+            lot_size,
             so_name,
         )
     }

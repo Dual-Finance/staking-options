@@ -4,9 +4,9 @@ Staking Options is a library for use in the Dual Finance ecosystem. One of the c
 
 ## How to integrate for projects
 
- 1. config
-	 - Project configures all the different parameters for the SO (Staking Option). This includes how long the options have until expiration, how many options are available, and other parameters needed for staking options.
- 2. initStrike
+1. config
+	 - Project configures all the different parameters for the SO (Staking Option). This includes how long the options have until expiration, how many options are available, lot size, and other parameters needed for staking options.
+2. initStrike
 	 - Project decides what strike to configure for options. A project can customize strikes to unlock taregted value for there community.
 3. issue
 	 - Project calls into this program to issue options to a user. The project decides which strike to use and how many total options to give.

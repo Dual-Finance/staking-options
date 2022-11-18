@@ -17,7 +17,6 @@ import {
 const anchor = require('@project-serum/anchor');
 
 describe('staking-options', () => {
-  // Configure the client to use the local cluster.
   anchor.setProvider(anchor.Provider.env());
   const provider: Provider = anchor.Provider.env();
   const program = anchor.workspace.StakingOptions as Program<StakingOptions>;
@@ -43,6 +42,7 @@ describe('staking-options', () => {
   const numTokens: number = 1_000_000_000;
   const STRIKE: number = 1_000;
   const OPTIONS_AMOUNT: number = 1_000;
+  const LOT_SIZE: number = 1_000_000;
   const SO_NAME: string = 'SO';
 
   async function configureSO() {
@@ -99,6 +99,7 @@ describe('staking-options', () => {
       new anchor.BN(optionExpiration),
       new anchor.BN(subscriptionPeriodEnd),
       new anchor.BN(numTokens),
+      new anchor.BN(LOT_SIZE),
       SO_NAME,
       {
         accounts: {
@@ -323,16 +324,15 @@ describe('staking-options', () => {
       await initStrike(STRIKE);
       await issue(OPTIONS_AMOUNT, STRIKE);
       await exercise(OPTIONS_AMOUNT);
-
-      const userBaseAccountAccount = await getTokenAccount(
-        provider,
-        userBaseAccount,
-      );
-      assert.equal(userBaseAccountAccount.amount.toNumber(), OPTIONS_AMOUNT);
     } catch (err) {
       console.log(err);
       assert(false);
     }
+    const userBaseAccountAccount = await getTokenAccount(
+      provider,
+      userBaseAccount,
+    );
+    assert.equal(userBaseAccountAccount.amount.toNumber(), OPTIONS_AMOUNT * LOT_SIZE);
   });
 
   it('Withdraw Success', async () => {
@@ -342,18 +342,17 @@ describe('staking-options', () => {
       await issue(OPTIONS_AMOUNT, STRIKE);
       await exercise(OPTIONS_AMOUNT);
       await withdraw();
-
-      const userBaseAccountAccount = await getTokenAccount(
-        provider,
-        baseAccount,
-      );
-      assert.equal(
-        userBaseAccountAccount.amount.toNumber(),
-        numTokens - OPTIONS_AMOUNT,
-      );
     } catch (err) {
       console.log(err);
       assert(false);
     }
+    const userBaseAccountAccount = await getTokenAccount(
+      provider,
+      baseAccount,
+    );
+    assert.equal(
+      userBaseAccountAccount.amount.toNumber(),
+      numTokens - OPTIONS_AMOUNT * LOT_SIZE,
+    );
   });
 });

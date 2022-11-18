@@ -3,8 +3,6 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 pub use crate::*;
 
 pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
-    // TODO: Log the state
-
     // Verify the mint is at the right address
     check_mint!(ctx, strike);
 

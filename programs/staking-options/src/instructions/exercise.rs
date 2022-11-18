@@ -2,7 +2,7 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 pub use crate::*;
 
-pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> {
+pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result<()> {
     // Verify the mint is correct.
     check_mint!(ctx, strike);
 
@@ -15,11 +15,10 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
             authority: ctx.accounts.authority.to_account_info().clone(),
         },
     );
-    anchor_spl::token::burn(burn_ctx, amount)?;
+    anchor_spl::token::burn(burn_ctx, amount_lots)?;
 
     // Take the Quote Token payment
-    let payment: u64 = unwrap_int!((unwrap_int!(amount.checked_mul(strike)))
-        .checked_div(u64::pow(10, ctx.accounts.state.quote_decimals as u32)));
+    let payment: u64 = unwrap_int!(amount_lots.checked_mul(strike));
 
     // 3.5% fee.
     let fee: u64 = unwrap_int!(unwrap_int!(payment.checked_mul(35)).checked_div(1_000));
@@ -62,7 +61,7 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
                 &[ctx.accounts.state.vault_bump],
             ]],
         ),
-        amount,
+        unwrap_int!(amount_lots.checked_mul(ctx.accounts.state.lot_size)),
     )?;
 
     Ok(())

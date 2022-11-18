@@ -14,7 +14,7 @@ pub struct State {
     // PDA or owner of the project.
     pub authority: Pubkey,
 
-    // Number of tokens available for SOs
+    // Number of tokens available for SOs. Units are atoms of the base.
     pub options_available: u64,
 
     // Seconds since unix epoch for options to expire.
@@ -38,10 +38,13 @@ pub struct State {
     // The account that will receive payments on the options.
     pub quote_account: Pubkey,
 
-    // Vector of all strikes for an SO. Limit 100. For monitoring only. A strike
-    // is number of quote atoms per full base token.
-    pub strikes: Vec<u64>,
+    // Number of atoms of the base token to be traded per lot.
+    pub lot_size: u64,
 
     pub state_bump: u8,
     pub vault_bump: u8,
+
+    // Vector of all strikes for an SO. Limit 100. For monitoring only.
+    // A strike is number of quote atoms per lot.
+    pub strikes: Vec<u64>,
 }
