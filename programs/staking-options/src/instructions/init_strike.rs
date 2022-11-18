@@ -5,10 +5,6 @@ use vipers::prelude::*;
 pub use crate::common::*;
 
 pub fn init_strike(ctx: Context<InitStrike>, strike: u64) -> Result<()> {
-    // Verify the state is at the right address. Done here so we can get the
-    // program id.
-    check_state!(ctx);
-
     ctx.accounts.state.strikes.push(strike);
 
     Ok(())
@@ -22,7 +18,14 @@ pub struct InitStrike<'info> {
 
     // State holding all the data for the stake that the staker wants to do.
     // Needs to be updated to reflect the new strike.
-    #[account(mut)]
+    #[account(mut,
+        seeds = [
+            SO_CONFIG_SEED,
+            state.so_name.as_bytes(),
+            &state.base_mint.key().to_bytes()
+        ],
+        bump = state.state_bump
+    )]
     pub state: Box<Account<'info, State>>,
 
     #[account(
@@ -34,8 +37,6 @@ pub struct InitStrike<'info> {
         mint::authority = state.authority)]
     pub option_mint: Account<'info, Mint>,
 
-    // TODO: Consider a data account at PDA(mint address) for a reverse lookup
-    // so if you have a token, you can remember the strike and base mint.
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,

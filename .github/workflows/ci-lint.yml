@@ -1,6 +1,7 @@
 name: Lint
 on:
   push:
+    branches: master
   pull_request:
 
 env:
@@ -31,9 +32,8 @@ jobs:
 
       - name: Run fmt
         run: cargo fmt -- --check
-      # The style and complexity lints have not been processed yet.
       - name: Run clippy
-        run: cargo clippy -- --deny=warnings --allow=clippy::style --allow=clippy::complexity
+        run: cargo clippy -- --deny=warnings --allow=clippy::style --allow=clippy::complexity  --allow=clippy::result_large_err
 
       - name: Install eslint
         run: yarn install

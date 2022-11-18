@@ -3,11 +3,6 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 pub use crate::*;
 
 pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
-    // TODO: Log the state
-
-    // Verify the state is at the right address
-    check_state!(ctx);
-
     // Verify the mint is at the right address
     check_mint!(ctx, strike);
 
@@ -35,7 +30,14 @@ pub struct Issue<'info> {
     pub authority: Signer<'info>,
 
     // State holding all the data for the stake that the staker wants to do.
-    #[account(mut)]
+    #[account(mut,
+        seeds = [
+            SO_CONFIG_SEED,
+            state.so_name.as_bytes(),
+            &state.base_mint.key().to_bytes()
+        ],
+        bump = state.state_bump
+    )]
     pub state: Box<Account<'info, State>>,
 
     #[account(mut)]

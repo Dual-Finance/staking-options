@@ -2,13 +2,7 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 pub use crate::*;
 
-pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> {
-    // Verify the state is at the right PDA
-    check_state!(ctx);
-
-    // Verify the vault is correct.
-    check_vault!(ctx);
-
+pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result<()> {
     // Verify the mint is correct.
     check_mint!(ctx, strike);
 
@@ -21,11 +15,10 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
             authority: ctx.accounts.authority.to_account_info().clone(),
         },
     );
-    anchor_spl::token::burn(burn_ctx, amount)?;
+    anchor_spl::token::burn(burn_ctx, amount_lots)?;
 
     // Take the Quote Token payment
-    let payment: u64 = unwrap_int!((unwrap_int!(amount.checked_mul(strike)))
-        .checked_div(u64::pow(10, ctx.accounts.state.quote_decimals as u32)));
+    let payment: u64 = unwrap_int!(amount_lots.checked_mul(strike));
 
     // 3.5% fee.
     let fee: u64 = unwrap_int!(unwrap_int!(payment.checked_mul(35)).checked_div(1_000));
@@ -53,8 +46,6 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
     )?;
 
     // Transfer the base tokens
-    let (_so_vault, so_vault_bump) =
-        Pubkey::find_program_address(gen_vault_seeds!(ctx), ctx.program_id);
     anchor_spl::token::transfer(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -66,12 +57,11 @@ pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> 
             &[&[
                 SO_VAULT_SEED,
                 &ctx.accounts.state.so_name.as_bytes(),
-                &ctx.accounts.state.period_num.to_be_bytes(),
                 &ctx.accounts.state.base_mint.key().to_bytes(),
-                &[so_vault_bump],
+                &[ctx.accounts.state.vault_bump],
             ]],
         ),
-        amount,
+        unwrap_int!(amount_lots.checked_mul(ctx.accounts.state.lot_size)),
     )?;
 
     Ok(())
@@ -83,6 +73,14 @@ pub struct Exercise<'info> {
     pub authority: Signer<'info>,
 
     /// State holding all the data for the stake that the staker wants to do.
+    #[account(mut,
+        seeds = [
+            SO_CONFIG_SEED,
+            state.so_name.as_bytes(),
+            &state.base_mint.key().to_bytes()
+        ],
+        bump = state.state_bump
+    )]
     pub state: Box<Account<'info, State>>,
 
     /// Where the SO are coming from.
@@ -105,7 +103,10 @@ pub struct Exercise<'info> {
     pub fee_quote_account: Box<Account<'info, TokenAccount>>,
 
     /// The base token location for this SO.
-    #[account(mut)]
+    #[account(mut,
+        seeds = [SO_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
+        bump = state.vault_bump,
+    )]
     pub base_vault: Box<Account<'info, TokenAccount>>,
 
     /// Where the base tokens are going.
