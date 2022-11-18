@@ -11,7 +11,8 @@ Staking Options is a library for use in the Dual Finance ecosystem. One of the c
 3. issue
 	 - Project calls into this program to issue options to a user. The project decides which strike to use and how many total options to give.
 	 These are in units of lot size. All options are a call. The recipient can swap their quote tokens for base tokens. In order to make a put,
-	 switch the base and quote and adjust lot/strike accordingly.
+	 switch the base and quote and adjust lot/strike accordingly. 
+	 For example, $10 SOL Downside SO (Put) you would configure the strike price to be 0.1 & base = USDC, quote = SOL
 3. withdraw
 	 - After the options expire, this program returns the remaining tokens to the project. The quote tokens were already given during exercise.
 
