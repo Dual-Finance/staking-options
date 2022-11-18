@@ -47,4 +47,6 @@ pub struct State {
     // Vector of all strikes for an SO. Limit 100. For monitoring only.
     // A strike is number of quote atoms per lot.
     pub strikes: Vec<u64>,
+
+    // Padding
 }
