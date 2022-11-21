@@ -1,8 +1,9 @@
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import assert from "assert";
-import { PublicKey, Transaction } from "@solana/web3.js";
-import { Provider, Program } from "@project-serum/anchor";
-import { StakingOptions } from "../target/types/staking_options";
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import assert from 'assert';
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { Provider, Program } from '@project-serum/anchor';
+import { StakingOptions as SO } from '@dual-finance/staking-options';
+import { StakingOptions } from '../target/types/staking_options';
 import {
   createMint,
   createTokenAccount,
@@ -10,21 +11,20 @@ import {
   mintToAccount,
   DEFAULT_MINT_DECIMALS,
   toBeBytes,
-} from "./utils/index";
-import { StakingOptions as SO } from "@dual-finance/staking-options";
+} from './utils/index';
 
-const anchor = require("@project-serum/anchor");
+const anchor = require('@project-serum/anchor');
 
-describe("staking-options", () => {
+describe('staking-options', () => {
   anchor.setProvider(anchor.Provider.env());
   const provider: Provider = anchor.Provider.env();
   const program = anchor.workspace.StakingOptions as Program<StakingOptions>;
 
   const so = new SO(provider.connection.rpcEndpoint);
 
-  const SO_CONFIG_SEED = "so-config";
-  const SO_VAULT_SEED = "so-vault";
-  const SO_MINT_SEED = "so-mint";
+  const SO_CONFIG_SEED = 'so-config';
+  const SO_VAULT_SEED = 'so-vault';
+  const SO_MINT_SEED = 'so-mint';
 
   let baseMint: PublicKey;
   let baseAccount: PublicKey;
@@ -44,10 +44,10 @@ describe("staking-options", () => {
   const STRIKE: number = 1_000;
   const OPTIONS_AMOUNT: number = 1_000;
   const LOT_SIZE: number = 1_000_000;
-  const SO_NAME: string = "SO";
+  const SO_NAME: string = 'SO';
 
   async function configureSO() {
-    console.log("Configuring SO");
+    console.log('Configuring SO');
 
     optionExpiration = Math.floor(Date.now() / 1000 + 100);
     subscriptionPeriodEnd = optionExpiration;
@@ -56,21 +56,21 @@ describe("staking-options", () => {
     baseAccount = await createTokenAccount(
       provider,
       baseMint,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
     await mintToAccount(
       provider,
       baseMint,
       baseAccount,
       numTokens,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
     if (!quoteMint) {
       quoteMint = await createMint(provider);
       quoteAccount = await createTokenAccount(
         provider,
         quoteMint,
-        provider.wallet.publicKey
+        provider.wallet.publicKey,
       );
     }
 
@@ -80,19 +80,18 @@ describe("staking-options", () => {
         Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
         baseMint.toBuffer(),
       ],
-      program.programId
+      program.programId,
     );
     state = _state;
 
-    const [_baseVault, _baseVaultBump] =
-      await anchor.web3.PublicKey.findProgramAddress(
-        [
-          Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
-          Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
-          baseMint.toBuffer(),
-        ],
-        program.programId
-      );
+    const [_baseVault, _baseVaultBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
+        Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
+        baseMint.toBuffer(),
+      ],
+      program.programId,
+    );
     baseVault = _baseVault;
 
     const instr = await so.createConfigInstruction(
@@ -105,7 +104,7 @@ describe("staking-options", () => {
       baseMint,
       baseAccount,
       quoteMint,
-      quoteAccount
+      quoteAccount,
     );
 
     const tx = new Transaction();
@@ -114,24 +113,23 @@ describe("staking-options", () => {
   }
 
   async function initStrike(strike: number) {
-    console.log("Init Strike");
+    console.log('Init Strike');
 
-    const [_optionMint, _optionMintBump] =
-      await anchor.web3.PublicKey.findProgramAddress(
-        [
-          Buffer.from(anchor.utils.bytes.utf8.encode(SO_MINT_SEED)),
-          state.toBuffer(),
-          toBeBytes(strike),
-        ],
-        program.programId
-      );
+    const [_optionMint, _optionMintBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from(anchor.utils.bytes.utf8.encode(SO_MINT_SEED)),
+        state.toBuffer(),
+        toBeBytes(strike),
+      ],
+      program.programId,
+    );
     optionMint = _optionMint;
 
     const instr = await so.createInitStrikeInstruction(
       strike,
       SO_NAME,
       provider.wallet.publicKey,
-      baseMint
+      baseMint,
     );
 
     const tx = new Transaction();
@@ -140,12 +138,12 @@ describe("staking-options", () => {
   }
 
   async function issue(amount: number, strike: number) {
-    console.log("Issuing");
+    console.log('Issuing');
 
     userSoAccount = await createTokenAccount(
       provider,
       optionMint,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
 
     const instr = await so.createIssueInstruction(
@@ -154,7 +152,7 @@ describe("staking-options", () => {
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
-      userSoAccount
+      userSoAccount,
     );
     const tx = new Transaction();
     tx.add(instr);
@@ -162,14 +160,14 @@ describe("staking-options", () => {
   }
 
   async function addTokens() {
-    console.log("Adding tokens");
+    console.log('Adding tokens');
     // Top off the number of available tokens for the LSO.
     await mintToAccount(
       provider,
       baseMint,
       baseAccount,
       numTokens,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
 
     const instr = await so.createAddTokensInstruction(
@@ -177,7 +175,7 @@ describe("staking-options", () => {
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
-      baseAccount
+      baseAccount,
     );
     const tx = new Transaction();
     tx.add(instr);
@@ -185,29 +183,29 @@ describe("staking-options", () => {
   }
 
   async function exercise(amount: number) {
-    console.log("Exercising");
+    console.log('Exercising');
 
     userQuoteAccount = await createTokenAccount(
       provider,
       quoteMint,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
     await mintToAccount(
       provider,
       quoteMint,
       userQuoteAccount,
       OPTIONS_AMOUNT * STRIKE * DEFAULT_MINT_DECIMALS,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
     feeQuoteAccount = await createTokenAccount(
       provider,
       quoteMint,
-      new PublicKey("CZqTD3b3oQw8cDK4CBddpKF6epA1fR36GBbvU5VBt2Dz")
+      new PublicKey('CZqTD3b3oQw8cDK4CBddpKF6epA1fR36GBbvU5VBt2Dz'),
     );
     userBaseAccount = await createTokenAccount(
       provider,
       baseMint,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
 
     const instr = await so.createExerciseInstruction(
@@ -220,7 +218,7 @@ describe("staking-options", () => {
       userQuoteAccount,
       quoteAccount,
       feeQuoteAccount,
-      userBaseAccount
+      userBaseAccount,
     );
     const tx = new Transaction();
     tx.add(instr);
@@ -228,35 +226,35 @@ describe("staking-options", () => {
   }
 
   async function withdraw() {
-    console.log("Withdrawing");
-    console.log("Sleeping til options expire");
+    console.log('Withdrawing');
+    console.log('Sleeping til options expire');
     await new Promise((r) => setTimeout(r, 100_000));
 
     const instr = await so.createWithdrawInstruction(
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
-      baseAccount
+      baseAccount,
     );
     const tx = new Transaction();
     tx.add(instr);
     await provider.send(tx);
   }
 
-  it("Config Success", async () => {
+  it('Config Success', async () => {
     await configureSO();
 
     // Verify the State.
     const stateObj = await program.account.state.fetch(state);
     assert.equal(
       stateObj.authority.toBase58(),
-      provider.wallet.publicKey.toBase58()
+      provider.wallet.publicKey.toBase58(),
     );
     assert.equal(stateObj.optionsAvailable.toNumber(), numTokens);
     assert.equal(stateObj.optionExpiration.toNumber(), optionExpiration);
     assert.equal(
       stateObj.subscriptionPeriodEnd.toNumber(),
-      subscriptionPeriodEnd
+      subscriptionPeriodEnd,
     );
     assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
     assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
@@ -269,7 +267,7 @@ describe("staking-options", () => {
     assert.equal(baseVaultAccount.amount.toNumber(), numTokens);
   });
 
-  it("InitStrike Success", async () => {
+  it('InitStrike Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
 
@@ -278,7 +276,7 @@ describe("staking-options", () => {
     assert.equal(stateObj.strikes[0].toNumber(), STRIKE);
   });
 
-  it("Issue Success", async () => {
+  it('Issue Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
     await issue(OPTIONS_AMOUNT, STRIKE);
@@ -287,7 +285,7 @@ describe("staking-options", () => {
     assert.equal(userSoAccountAccount.amount.toNumber(), OPTIONS_AMOUNT);
   });
 
-  it("AddTokens Success", async () => {
+  it('AddTokens Success', async () => {
     await configureSO();
     await initStrike(STRIKE);
     await addTokens();
@@ -295,11 +293,11 @@ describe("staking-options", () => {
     const baseVaultAccount = await getTokenAccount(provider, baseVault);
     assert.equal(
       baseVaultAccount.amount.toNumber(),
-      numTokens + OPTIONS_AMOUNT
+      numTokens + OPTIONS_AMOUNT,
     );
   });
 
-  it("Exercise Success", async () => {
+  it('Exercise Success', async () => {
     try {
       await configureSO();
       await initStrike(STRIKE);
@@ -311,15 +309,15 @@ describe("staking-options", () => {
     }
     const userBaseAccountAccount = await getTokenAccount(
       provider,
-      userBaseAccount
+      userBaseAccount,
     );
     assert.equal(
       userBaseAccountAccount.amount.toNumber(),
-      OPTIONS_AMOUNT * LOT_SIZE
+      OPTIONS_AMOUNT * LOT_SIZE,
     );
   });
 
-  it("Withdraw Success", async () => {
+  it('Withdraw Success', async () => {
     try {
       await configureSO();
       await initStrike(STRIKE);
@@ -333,7 +331,7 @@ describe("staking-options", () => {
     const userBaseAccountAccount = await getTokenAccount(provider, baseAccount);
     assert.equal(
       userBaseAccountAccount.amount.toNumber(),
-      numTokens - OPTIONS_AMOUNT * LOT_SIZE
+      numTokens - OPTIONS_AMOUNT * LOT_SIZE,
     );
   });
 });
