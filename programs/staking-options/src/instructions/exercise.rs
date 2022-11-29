@@ -20,30 +20,33 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
     // Take the Quote Token payment
     let payment: u64 = unwrap_int!(amount_lots.checked_mul(strike));
 
-    // 3.5% fee.
-    let fee: u64 = unwrap_int!(unwrap_int!(payment.checked_mul(35)).checked_div(1_000));
-    anchor_spl::token::transfer(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            anchor_spl::token::Transfer {
-                from: ctx.accounts.user_quote_account.to_account_info(),
-                to: ctx.accounts.project_quote_account.to_account_info(),
-                authority: ctx.accounts.authority.to_account_info().clone(),
-            },
-        ),
-        unwrap_int!(payment.checked_sub(fee)),
-    )?;
-    anchor_spl::token::transfer(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            anchor_spl::token::Transfer {
-                from: ctx.accounts.user_quote_account.to_account_info(),
-                to: ctx.accounts.fee_quote_account.to_account_info(),
-                authority: ctx.accounts.authority.to_account_info().clone(),
-            },
-        ),
-        fee,
-    )?;
+    // Do not charge fee if the DUAL DAO is exercising
+    if ctx.accounts.user_quote_account.owner != "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE" {
+        // 3.5% fee.
+        let fee: u64 = unwrap_int!(unwrap_int!(payment.checked_mul(35)).checked_div(1_000));
+        anchor_spl::token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from: ctx.accounts.user_quote_account.to_account_info(),
+                    to: ctx.accounts.project_quote_account.to_account_info(),
+                    authority: ctx.accounts.authority.to_account_info().clone(),
+                },
+            ),
+            unwrap_int!(payment.checked_sub(fee)),
+        )?;
+        anchor_spl::token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from: ctx.accounts.user_quote_account.to_account_info(),
+                    to: ctx.accounts.fee_quote_account.to_account_info(),
+                    authority: ctx.accounts.authority.to_account_info().clone(),
+                },
+            ),
+            fee,
+        )?;
+    }
 
     // Transfer the base tokens
     anchor_spl::token::transfer(
