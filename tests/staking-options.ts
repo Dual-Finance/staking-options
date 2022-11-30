@@ -200,7 +200,7 @@ describe('staking-options', () => {
     feeQuoteAccount = await createTokenAccount(
       provider,
       quoteMint,
-      new PublicKey('CZqTD3b3oQw8cDK4CBddpKF6epA1fR36GBbvU5VBt2Dz'),
+      new PublicKey('7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE'),
     );
     userBaseAccount = await createTokenAccount(
       provider,
