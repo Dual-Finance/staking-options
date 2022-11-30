@@ -42,7 +42,7 @@ describe('staking-options', () => {
   let subscriptionPeriodEnd: number;
   const numTokens: number = 1_000_000_000;
   const STRIKE: number = 1_000;
-  const OPTIONS_AMOUNT: number = 1_000;
+  const OPTIONS_AMOUNT: number = 10_000_000;
   const LOT_SIZE: number = 1_000_000;
   const SO_NAME: string = 'SO';
 
@@ -282,7 +282,7 @@ describe('staking-options', () => {
     await issue(OPTIONS_AMOUNT, STRIKE);
 
     const userSoAccountAccount = await getTokenAccount(provider, userSoAccount);
-    assert.equal(userSoAccountAccount.amount.toNumber(), OPTIONS_AMOUNT);
+    assert.equal(userSoAccountAccount.amount.toNumber(), OPTIONS_AMOUNT / LOT_SIZE);
   });
 
   it('AddTokens Success', async () => {
@@ -302,7 +302,7 @@ describe('staking-options', () => {
       await configureSO();
       await initStrike(STRIKE);
       await issue(OPTIONS_AMOUNT, STRIKE);
-      await exercise(OPTIONS_AMOUNT);
+      await exercise(OPTIONS_AMOUNT / LOT_SIZE);
     } catch (err) {
       console.log(err);
       assert(false);
@@ -313,7 +313,7 @@ describe('staking-options', () => {
     );
     assert.equal(
       userBaseAccountAccount.amount.toNumber(),
-      OPTIONS_AMOUNT * LOT_SIZE,
+      OPTIONS_AMOUNT,
     );
   });
 
@@ -322,7 +322,7 @@ describe('staking-options', () => {
       await configureSO();
       await initStrike(STRIKE);
       await issue(OPTIONS_AMOUNT, STRIKE);
-      await exercise(OPTIONS_AMOUNT);
+      await exercise(OPTIONS_AMOUNT / LOT_SIZE);
       await withdraw();
     } catch (err) {
       console.log(err);
@@ -331,7 +331,7 @@ describe('staking-options', () => {
     const userBaseAccountAccount = await getTokenAccount(provider, baseAccount);
     assert.equal(
       userBaseAccountAccount.amount.toNumber(),
-      numTokens - OPTIONS_AMOUNT * LOT_SIZE,
+      numTokens - OPTIONS_AMOUNT,
     );
   });
 });

@@ -33,7 +33,7 @@ pub struct InitStrike<'info> {
         payer = authority,
         seeds = [SO_MINT_SEED, &state.key().to_bytes(), &strike.to_be_bytes()],
         bump,
-        mint::decimals = state.base_decimals,
+        mint::decimals = 0,
         mint::authority = state.authority)]
     pub option_mint: Account<'info, Mint>,
 
