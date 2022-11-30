@@ -13,13 +13,13 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
             anchor_spl::token::Burn {
                 mint: ctx.accounts.option_mint.to_account_info(),
                 from: ctx.accounts.user_so_account.to_account_info(),
-                authority: ctx.accounts.option_mint.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info(),
             },
             &[&[
                 SO_MINT_SEED,
                 &ctx.accounts.state.key().to_bytes(),
                 &strike.to_be_bytes(),
-                &[bump]
+                &[bump],
             ]],
         ),
         amount_lots,

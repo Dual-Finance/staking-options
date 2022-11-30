@@ -20,7 +20,7 @@ pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
                 SO_MINT_SEED,
                 &ctx.accounts.state.key().to_bytes(),
                 &strike.to_be_bytes(),
-                &[bump]
+                &[bump],
             ]],
         ),
         amount_lots,
