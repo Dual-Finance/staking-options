@@ -4,16 +4,7 @@ pub use crate::*;
 
 pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
     // Verify the mint is at the right address
-    check_mint!(ctx, strike);
-
-    let (_, bump) = Pubkey::find_program_address(
-        &[
-            SO_MINT_SEED,
-            &ctx.accounts.state.key().to_bytes(),
-            &strike.to_be_bytes(),
-        ],
-        ctx.program_id,
-    );
+    check_mint!(ctx, strike, bump);
 
     let amount_lots: u64 = unwrap_int!(amount.checked_div(ctx.accounts.state.lot_size));
 
@@ -23,7 +14,7 @@ pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
             anchor_spl::token::MintTo {
                 mint: ctx.accounts.option_mint.to_account_info(),
                 to: ctx.accounts.user_so_account.to_account_info(),
-                authority: ctx.accounts.authority.to_account_info().clone(),
+                authority: ctx.accounts.option_mint.to_account_info(),
             },
             &[&[
                 SO_MINT_SEED,

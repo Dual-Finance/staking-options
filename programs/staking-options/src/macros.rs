@@ -18,8 +18,8 @@ macro_rules! check_expired {
 
 // This check verifies that nobody made a fake SO State at a different address.
 macro_rules! check_mint {
-    ($ctx:expr, $strike:expr) => {
-        let (expected_mint, _expected_mint_bump) = Pubkey::find_program_address(
+    ($ctx:expr, $strike:expr, $bump:ident) => {
+        let (expected_mint, mint_bump) = Pubkey::find_program_address(
             &[
                 SO_MINT_SEED,
                 &$ctx.accounts.state.key().to_bytes(),
@@ -29,5 +29,6 @@ macro_rules! check_mint {
         );
 
         assert_keys_eq!($ctx.accounts.option_mint.key(), expected_mint, InvalidMint);
+        let $bump = mint_bump;
     };
 }
