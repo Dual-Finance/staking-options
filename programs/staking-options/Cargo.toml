@@ -1,5 +1,5 @@
 [package]
-name = "staking-options"
+name = "staking_options"
 version = "0.0.4"
 description = "Staking options from dual finance"
 edition = "2018"
