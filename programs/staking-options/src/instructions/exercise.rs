@@ -4,18 +4,26 @@ pub use crate::*;
 
 pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result<()> {
     // Verify the mint is correct.
-    check_mint!(ctx, strike);
+    check_mint!(ctx, strike, bump);
 
     // Take the option tokens and burn
-    let burn_ctx = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
-        anchor_spl::token::Burn {
-            mint: ctx.accounts.option_mint.to_account_info(),
-            from: ctx.accounts.user_so_account.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info().clone(),
-        },
-    );
-    anchor_spl::token::burn(burn_ctx, amount_lots)?;
+    anchor_spl::token::burn(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            anchor_spl::token::Burn {
+                mint: ctx.accounts.option_mint.to_account_info(),
+                from: ctx.accounts.user_so_account.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info(),
+            },
+            &[&[
+                SO_MINT_SEED,
+                &ctx.accounts.state.key().to_bytes(),
+                &strike.to_be_bytes(),
+                &[bump],
+            ]],
+        ),
+        amount_lots,
+    )?;
 
     // Take the Quote Token payment
     let payment: u64 = unwrap_int!(amount_lots.checked_mul(strike));
@@ -134,7 +142,7 @@ impl<'info> Exercise<'info> {
         // Verify that it is owned by DUAL.
         assert_eq!(
             self.fee_quote_account.owner.key().to_string(),
-            "CZqTD3b3oQw8cDK4CBddpKF6epA1fR36GBbvU5VBt2Dz"
+            "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
         );
 
         // Verify expiration

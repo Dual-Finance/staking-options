@@ -34,7 +34,7 @@ pub struct InitStrike<'info> {
         seeds = [SO_MINT_SEED, &state.key().to_bytes(), &strike.to_be_bytes()],
         bump,
         mint::decimals = 0,
-        mint::authority = state.authority)]
+        mint::authority = option_mint)]
     pub option_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
