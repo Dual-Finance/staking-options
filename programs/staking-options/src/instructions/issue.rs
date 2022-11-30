@@ -6,18 +6,34 @@ pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
     // Verify the mint is at the right address
     check_mint!(ctx, strike);
 
+    let (_, bump) = Pubkey::find_program_address(
+        &[
+            SO_MINT_SEED,
+            &ctx.accounts.state.key().to_bytes(),
+            &strike.to_be_bytes(),
+        ],
+        ctx.program_id,
+    );
+
     let amount_lots: u64 = unwrap_int!(amount.checked_div(ctx.accounts.state.lot_size));
 
-    // Mint tokens for the user
-    let cpi_ctx = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
-        anchor_spl::token::MintTo {
-            mint: ctx.accounts.option_mint.to_account_info(),
-            to: ctx.accounts.user_so_account.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info().clone(),
-        },
-    );
-    anchor_spl::token::mint_to(cpi_ctx, amount_lots)?;
+    anchor_spl::token::mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            anchor_spl::token::MintTo {
+                mint: ctx.accounts.option_mint.to_account_info(),
+                to: ctx.accounts.user_so_account.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info().clone(),
+            },
+            &[&[
+                SO_MINT_SEED,
+                &ctx.accounts.state.key().to_bytes(),
+                &strike.to_be_bytes(),
+                &[bump]
+            ]],
+        ),
+        amount_lots,
+    )?;
 
     // Update state to reflect the number of available tokens
     ctx.accounts.state.options_available =

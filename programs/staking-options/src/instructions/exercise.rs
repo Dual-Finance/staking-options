@@ -6,16 +6,33 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
     // Verify the mint is correct.
     check_mint!(ctx, strike);
 
-    // Take the option tokens and burn
-    let burn_ctx = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
-        anchor_spl::token::Burn {
-            mint: ctx.accounts.option_mint.to_account_info(),
-            from: ctx.accounts.user_so_account.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info().clone(),
-        },
+    let (_, bump) = Pubkey::find_program_address(
+        &[
+            SO_MINT_SEED,
+            &ctx.accounts.state.key().to_bytes(),
+            &strike.to_be_bytes(),
+        ],
+        ctx.program_id,
     );
-    anchor_spl::token::burn(burn_ctx, amount_lots)?;
+
+    // Take the option tokens and burn
+    anchor_spl::token::burn(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            anchor_spl::token::Burn {
+                mint: ctx.accounts.option_mint.to_account_info(),
+                from: ctx.accounts.user_so_account.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info().clone(),
+            },
+            &[&[
+                SO_MINT_SEED,
+                &ctx.accounts.state.key().to_bytes(),
+                &strike.to_be_bytes(),
+                &[bump]
+            ]],
+        ),
+        amount_lots,
+    )?;
 
     // Take the Quote Token payment
     let payment: u64 = unwrap_int!(amount_lots.checked_mul(strike));
