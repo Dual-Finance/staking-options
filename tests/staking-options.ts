@@ -2,11 +2,11 @@ import assert from 'assert';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { Provider, Program } from '@project-serum/anchor';
 import { StakingOptions as SO } from '@dual-finance/staking-options';
-import { StakingOptions } from '../target/types/staking_options';
 import {
   createAssociatedTokenAccount,
-  getAssociatedTokenAddress
+  getAssociatedTokenAddress,
 } from '@project-serum/associated-token';
+import { StakingOptions } from '../target/types/staking_options';
 import {
   createMint,
   createTokenAccount,
@@ -207,20 +207,23 @@ describe('staking-options', () => {
 
     // Sleep so the account gets created
     await new Promise((r) => setTimeout(r, 1_000));
-    const feeAccount = await getAssociatedTokenAddress( new PublicKey("7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"), quoteMint);
+    const feeAccount = await getAssociatedTokenAddress(new PublicKey('7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE'), quoteMint);
 
     try {
-      console.log("Creating ATA", feeAccount.toBase58());
+      console.log('Creating ATA', feeAccount.toBase58());
       const ataTx = new Transaction();
       ataTx.add(
         await createAssociatedTokenAccount(
           provider.wallet.publicKey,
-          new PublicKey("7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"),
-          quoteMint
-        ));
+          new PublicKey('7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE'),
+          quoteMint,
+        ),
+      );
       await provider.send(ataTx);
       await new Promise((r) => setTimeout(r, 1_000));
-    } catch (err) {}
+    } catch (err) {
+      console.log('Fee account already exists');
+    }
 
     const instr = await so.createExerciseInstruction(
       amount,
