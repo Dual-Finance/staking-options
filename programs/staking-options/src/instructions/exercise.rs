@@ -6,6 +6,8 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
     // Verify the mint is correct.
     check_mint!(ctx, strike, bump);
 
+    // TODO: Store all of the strikes on the state object and their bumps as well as a mapping of token to strike
+
     // Take the option tokens and burn
     anchor_spl::token::burn(
         CpiContext::new_with_signer(
