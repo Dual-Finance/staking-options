@@ -105,7 +105,6 @@ pub struct Config<'info> {
     pub quote_mint: Box<Account<'info, Mint>>,
 
     // TODO: Init the fee account
-
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
