@@ -373,6 +373,7 @@ module.exports = {
   getTokenAccount,
   createMint,
   createTokenAccount,
+  createTokenAccountInstrs,
   mintToAccount,
   parsePriceData,
   parsePriceAndExpiration,

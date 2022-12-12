@@ -104,6 +104,7 @@ pub struct Config<'info> {
     /// Mint of quote tokens. Needed for storing the number of decimals.
     pub quote_mint: Box<Account<'info, Mint>>,
 
+    // TODO: Init the fee account
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,

@@ -1,8 +1,11 @@
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import assert from 'assert';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { Provider, Program } from '@project-serum/anchor';
 import { StakingOptions as SO } from '@dual-finance/staking-options';
+import {
+  createAssociatedTokenAccount,
+  getAssociatedTokenAddress,
+} from '@project-serum/associated-token';
 import { StakingOptions } from '../target/types/staking_options';
 import {
   createMint,
@@ -35,7 +38,6 @@ describe('staking-options', () => {
   let userQuoteAccount: PublicKey;
   let optionMint: PublicKey;
   let userSoAccount: PublicKey;
-  let feeQuoteAccount: PublicKey;
   let userBaseAccount: PublicKey;
 
   let optionExpiration: number;
@@ -174,7 +176,6 @@ describe('staking-options', () => {
       OPTIONS_AMOUNT,
       SO_NAME,
       provider.wallet.publicKey,
-      baseMint,
       baseAccount,
     );
     const tx = new Transaction();
@@ -197,27 +198,40 @@ describe('staking-options', () => {
       OPTIONS_AMOUNT * STRIKE * DEFAULT_MINT_DECIMALS,
       provider.wallet.publicKey,
     );
-    feeQuoteAccount = await createTokenAccount(
-      provider,
-      quoteMint,
-      new PublicKey('7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE'),
-    );
+
     userBaseAccount = await createTokenAccount(
       provider,
       baseMint,
       provider.wallet.publicKey,
     );
 
+    // Sleep so the account gets created
+    await new Promise((r) => setTimeout(r, 1_000));
+    const feeAccount = await getAssociatedTokenAddress(new PublicKey('7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE'), quoteMint);
+
+    try {
+      console.log('Creating ATA', feeAccount.toBase58());
+      const ataTx = new Transaction();
+      ataTx.add(
+        await createAssociatedTokenAccount(
+          provider.wallet.publicKey,
+          new PublicKey('7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE'),
+          quoteMint,
+        ),
+      );
+      await provider.send(ataTx);
+      await new Promise((r) => setTimeout(r, 1_000));
+    } catch (err) {
+      console.log('Fee account already exists');
+    }
+
     const instr = await so.createExerciseInstruction(
       amount,
       STRIKE,
       SO_NAME,
       provider.wallet.publicKey,
-      baseMint,
       userSoAccount,
       userQuoteAccount,
-      quoteAccount,
-      feeQuoteAccount,
       userBaseAccount,
     );
     const tx = new Transaction();
@@ -233,7 +247,6 @@ describe('staking-options', () => {
     const instr = await so.createWithdrawInstruction(
       SO_NAME,
       provider.wallet.publicKey,
-      baseMint,
       baseAccount,
     );
     const tx = new Transaction();
