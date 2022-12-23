@@ -64,6 +64,11 @@ pub mod staking_options {
         init_strike::init_strike(ctx, strike)
     }
 
+    #[access_control(ctx.accounts.validate_accounts(strike))]
+    pub fn init_strike_with_payer(ctx: Context<InitStrikeWithPayer>, strike: u64) -> Result<()> {
+        init_strike::init_strike_with_payer(ctx, strike)
+    }
+
     #[access_control(ctx.accounts.validate_accounts(amount))]
     pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
         issue::issue(ctx, amount, strike)
