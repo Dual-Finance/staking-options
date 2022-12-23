@@ -3,6 +3,7 @@ name = "staking_options"
 version = "0.0.5"
 description = "Staking options from dual finance"
 edition = "2018"
+license = "Apache-2.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
