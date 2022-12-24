@@ -126,6 +126,8 @@ impl<'info> Config<'info> {
         check_not_expired!(option_expiration);
         check_not_expired!(subscription_period_end);
 
+        invariant!(subscription_period_end <= option_expiration);
+
         // Cannot verify the token type of the quote_account because it could be
         // something else for downside SO.
 
