@@ -58,6 +58,18 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
             ),
             fee,
         )?;
+    } else {
+        anchor_spl::token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    from: ctx.accounts.user_quote_account.to_account_info(),
+                    to: ctx.accounts.project_quote_account.to_account_info(),
+                    authority: ctx.accounts.authority.to_account_info().clone(),
+                },
+            ),
+            payment,
+        )?;
     }
 
     // Transfer the base tokens
