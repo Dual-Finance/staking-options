@@ -13,7 +13,6 @@ import {
   createMint,
   createTokenAccount,
   mintToAccount,
-  toBeBytes,
 } from './utils/utils';
 
 const anchor = require('@project-serum/anchor');
