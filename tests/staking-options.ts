@@ -6,8 +6,8 @@ import {
   createAssociatedTokenAccount,
   getAssociatedTokenAddress,
 } from '@project-serum/associated-token';
-import { StakingOptions } from '../target/types/staking_options';
 import { Metaplex } from '@metaplex-foundation/js';
+import { StakingOptions } from '../target/types/staking_options';
 import {
   DEFAULT_MINT_DECIMALS,
   createMint,
@@ -348,7 +348,7 @@ describe('staking-options', () => {
       Number(userBaseAccountAccount.amount),
       numTokens - OPTIONS_AMOUNT,
     );
-  })
+  });
 
   it('Name Token', async () => {
     try {
@@ -360,7 +360,7 @@ describe('staking-options', () => {
       const nft = await metaplex.nfts().findByMint({ mintAddress: optionMint });
       // This verifies that the name gets truncated as well as scientific
       // notation for strike in terms of tokens.
-      assert.equal(nft.name, "DUAL-SO_staking_options-1.00e-3");
+      assert.equal(nft.name, 'DUAL-SO_staking_options-1.00e-3');
     } catch (err) {
       console.log(err);
       assert(false);
