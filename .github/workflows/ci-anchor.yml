@@ -13,6 +13,10 @@ jobs:
 
       - name: List rustup toolchains
         run: rustup toolchain list
+      - name: Rust version
+        run: rustc --version
+      - name: Rust update
+        run: rustup update stable
       - name: Set default toolchain
         run: rustup default stable
       - name: List rustup toolchains
