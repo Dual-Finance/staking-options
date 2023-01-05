@@ -6,15 +6,15 @@ import {
   createAssociatedTokenAccount,
   getAssociatedTokenAddress,
 } from '@project-serum/associated-token';
+const { getAccount } = require('@solana/spl-token');
 import { StakingOptions } from '../target/types/staking_options';
 import {
+  DEFAULT_MINT_DECIMALS,
   createMint,
   createTokenAccount,
-  getTokenAccount,
   mintToAccount,
-  DEFAULT_MINT_DECIMALS,
   toBeBytes,
-} from './utils/index';
+} from './utils/utils';
 
 const anchor = require('@project-serum/anchor');
 
@@ -54,7 +54,7 @@ describe('staking-options', () => {
     optionExpiration = Math.floor(Date.now() / 1000 + 100);
     subscriptionPeriodEnd = optionExpiration;
 
-    baseMint = await createMint(provider);
+    baseMint = await createMint(provider, undefined);
     baseAccount = await createTokenAccount(
       provider,
       baseMint,
@@ -68,7 +68,7 @@ describe('staking-options', () => {
       provider.wallet.publicKey,
     );
     if (!quoteMint) {
-      quoteMint = await createMint(provider);
+      quoteMint = await createMint(provider, undefined);
       quoteAccount = await createTokenAccount(
         provider,
         quoteMint,
@@ -276,8 +276,8 @@ describe('staking-options', () => {
     assert.equal(stateObj.strikes.length, 0);
 
     // Verify the tokens are stored.
-    const baseVaultAccount = await getTokenAccount(provider, baseVault);
-    assert.equal(baseVaultAccount.amount.toNumber(), numTokens);
+    const baseVaultAccount = await getAccount(provider.connection, baseVault);
+    assert.equal(Number(baseVaultAccount.amount), numTokens);
   });
 
   it('InitStrike Success', async () => {
@@ -294,8 +294,8 @@ describe('staking-options', () => {
     await initStrike(STRIKE);
     await issue(OPTIONS_AMOUNT, STRIKE);
 
-    const userSoAccountAccount = await getTokenAccount(provider, userSoAccount);
-    assert.equal(userSoAccountAccount.amount.toNumber(), OPTIONS_AMOUNT / LOT_SIZE);
+    const userSoAccountAccount = await getAccount(provider.connection, userSoAccount);
+    assert.equal(Number(userSoAccountAccount.amount), OPTIONS_AMOUNT / LOT_SIZE);
   });
 
   it('AddTokens Success', async () => {
@@ -303,9 +303,9 @@ describe('staking-options', () => {
     await initStrike(STRIKE);
     await addTokens();
 
-    const baseVaultAccount = await getTokenAccount(provider, baseVault);
+    const baseVaultAccount = await getAccount(provider.connection, baseVault);
     assert.equal(
-      baseVaultAccount.amount.toNumber(),
+      Number(baseVaultAccount.amount),
       numTokens + OPTIONS_AMOUNT,
     );
   });
@@ -320,12 +320,12 @@ describe('staking-options', () => {
       console.log(err);
       assert(false);
     }
-    const userBaseAccountAccount = await getTokenAccount(
-      provider,
+    const userBaseAccountAccount = await getAccount(
+      provider.connection,
       userBaseAccount,
     );
     assert.equal(
-      userBaseAccountAccount.amount.toNumber(),
+      Number(userBaseAccountAccount.amount),
       OPTIONS_AMOUNT,
     );
   });
@@ -341,9 +341,9 @@ describe('staking-options', () => {
       console.log(err);
       assert(false);
     }
-    const userBaseAccountAccount = await getTokenAccount(provider, baseAccount);
+    const userBaseAccountAccount = await getAccount(provider.connection, baseAccount);
     assert.equal(
-      userBaseAccountAccount.amount.toNumber(),
+      Number(userBaseAccountAccount.amount),
       numTokens - OPTIONS_AMOUNT,
     );
   });
