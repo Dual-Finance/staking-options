@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 env:
-  ANCHOR_CLI_VERSION: 0.25.0
+  # Anchor 0.25.0 (latest) does not include x86_64 binary, use older version until resolved https://github.com/coral-xyz/anchor/issues/2076
+  ANCHOR_CLI_VERSION: 0.24.2
 
 jobs:
   build:
