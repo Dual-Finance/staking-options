@@ -16,8 +16,15 @@ staking_options = "4yx1NJ4Vqf2zT1oVLk4SySBhhDJXmXFt88ncm4gPxtL7"
 [test.validator]
 url = "https://api.mainnet-beta.solana.com"
 
+# Dual DAO
 [[test.validator.clone]]
 address = "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
+
+# Metaplex
+[[test.validator.clone]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+[[test.validator.clone]]
+address = "PwDiXFxQsGra4sFFTT8r1QWRMd4vfumiWC1jfWNfdYT"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

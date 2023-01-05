@@ -74,6 +74,10 @@ pub mod staking_options {
         issue::issue(ctx, amount, strike)
     }
 
+    pub fn name_token(ctx: Context<NameToken>, strike: u64) -> Result<()> {
+        name_token::name_token(ctx, strike)
+    }
+
     #[access_control(ctx.accounts.validate_accounts())]
     pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
         withdraw::withdraw(ctx)
