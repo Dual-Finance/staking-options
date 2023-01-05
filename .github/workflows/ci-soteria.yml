@@ -7,7 +7,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: "1.9.28"
+  SOLANA_VERSION: "1.14.11"
 
 jobs:
   build:
