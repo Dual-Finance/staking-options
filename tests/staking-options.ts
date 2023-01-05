@@ -25,10 +25,6 @@ describe('staking-options', () => {
 
   const so = new SO(provider.connection.rpcEndpoint);
 
-  const SO_CONFIG_SEED = 'so-config';
-  const SO_VAULT_SEED = 'so-vault';
-  const SO_MINT_SEED = 'so-mint';
-
   let baseMint: PublicKey;
   let baseAccount: PublicKey;
   let baseVault: PublicKey;
@@ -54,6 +50,7 @@ describe('staking-options', () => {
     optionExpiration = Math.floor(Date.now() / 1000 + 100);
     subscriptionPeriodEnd = optionExpiration;
 
+    // Use a new BaseMint every run so that there is a new State.
     baseMint = await createMint(provider, undefined);
     baseAccount = await createTokenAccount(
       provider,
@@ -76,25 +73,8 @@ describe('staking-options', () => {
       );
     }
 
-    const [_state, _stateBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_CONFIG_SEED)),
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
-        baseMint.toBuffer(),
-      ],
-      program.programId,
-    );
-    state = _state;
-
-    const [_baseVault, _baseVaultBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
-        baseMint.toBuffer(),
-      ],
-      program.programId,
-    );
-    baseVault = _baseVault;
+    state = await so.state(SO_NAME, baseMint);
+    baseVault = await so.baseVault(SO_NAME, baseMint);
 
     const instr = await so.createConfigInstruction(
       optionExpiration,
@@ -117,15 +97,7 @@ describe('staking-options', () => {
   async function initStrike(strike: number) {
     console.log('Init Strike');
 
-    const [_optionMint, _optionMintBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_MINT_SEED)),
-        state.toBuffer(),
-        toBeBytes(strike),
-      ],
-      program.programId,
-    );
-    optionMint = _optionMint;
+    optionMint = await so.soMint(strike, SO_NAME, baseMint);
 
     const instr = await so.createInitStrikeInstruction(
       strike,
