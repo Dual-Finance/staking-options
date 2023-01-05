@@ -8,14 +8,13 @@ import {
 } from '@project-serum/associated-token';
 import { StakingOptions } from '../target/types/staking_options';
 import {
+  DEFAULT_MINT_DECIMALS,
   createMint,
   createTokenAccount,
-  getTokenAccount,
   mintToAccount,
-  DEFAULT_MINT_DECIMALS,
-  toBeBytes,
-} from './utils/index';
+} from './utils/utils';
 
+const { getAccount } = require('@solana/spl-token');
 const anchor = require('@project-serum/anchor');
 
 describe('staking-options', () => {
@@ -24,10 +23,6 @@ describe('staking-options', () => {
   const program = anchor.workspace.StakingOptions as Program<StakingOptions>;
 
   const so = new SO(provider.connection.rpcEndpoint);
-
-  const SO_CONFIG_SEED = 'so-config';
-  const SO_VAULT_SEED = 'so-vault';
-  const SO_MINT_SEED = 'so-mint';
 
   let baseMint: PublicKey;
   let baseAccount: PublicKey;
@@ -54,7 +49,8 @@ describe('staking-options', () => {
     optionExpiration = Math.floor(Date.now() / 1000 + 100);
     subscriptionPeriodEnd = optionExpiration;
 
-    baseMint = await createMint(provider);
+    // Use a new BaseMint every run so that there is a new State.
+    baseMint = await createMint(provider, undefined);
     baseAccount = await createTokenAccount(
       provider,
       baseMint,
@@ -68,7 +64,7 @@ describe('staking-options', () => {
       provider.wallet.publicKey,
     );
     if (!quoteMint) {
-      quoteMint = await createMint(provider);
+      quoteMint = await createMint(provider, undefined);
       quoteAccount = await createTokenAccount(
         provider,
         quoteMint,
@@ -76,25 +72,8 @@ describe('staking-options', () => {
       );
     }
 
-    const [_state, _stateBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_CONFIG_SEED)),
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
-        baseMint.toBuffer(),
-      ],
-      program.programId,
-    );
-    state = _state;
-
-    const [_baseVault, _baseVaultBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_VAULT_SEED)),
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_NAME)),
-        baseMint.toBuffer(),
-      ],
-      program.programId,
-    );
-    baseVault = _baseVault;
+    state = await so.state(SO_NAME, baseMint);
+    baseVault = await so.baseVault(SO_NAME, baseMint);
 
     const instr = await so.createConfigInstruction(
       optionExpiration,
@@ -117,15 +96,7 @@ describe('staking-options', () => {
   async function initStrike(strike: number) {
     console.log('Init Strike');
 
-    const [_optionMint, _optionMintBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [
-        Buffer.from(anchor.utils.bytes.utf8.encode(SO_MINT_SEED)),
-        state.toBuffer(),
-        toBeBytes(strike),
-      ],
-      program.programId,
-    );
-    optionMint = _optionMint;
+    optionMint = await so.soMint(strike, SO_NAME, baseMint);
 
     const instr = await so.createInitStrikeInstruction(
       strike,
@@ -276,8 +247,8 @@ describe('staking-options', () => {
     assert.equal(stateObj.strikes.length, 0);
 
     // Verify the tokens are stored.
-    const baseVaultAccount = await getTokenAccount(provider, baseVault);
-    assert.equal(baseVaultAccount.amount.toNumber(), numTokens);
+    const baseVaultAccount = await getAccount(provider.connection, baseVault);
+    assert.equal(Number(baseVaultAccount.amount), numTokens);
   });
 
   it('InitStrike Success', async () => {
@@ -294,8 +265,8 @@ describe('staking-options', () => {
     await initStrike(STRIKE);
     await issue(OPTIONS_AMOUNT, STRIKE);
 
-    const userSoAccountAccount = await getTokenAccount(provider, userSoAccount);
-    assert.equal(userSoAccountAccount.amount.toNumber(), OPTIONS_AMOUNT / LOT_SIZE);
+    const userSoAccountAccount = await getAccount(provider.connection, userSoAccount);
+    assert.equal(Number(userSoAccountAccount.amount), OPTIONS_AMOUNT / LOT_SIZE);
   });
 
   it('AddTokens Success', async () => {
@@ -303,9 +274,9 @@ describe('staking-options', () => {
     await initStrike(STRIKE);
     await addTokens();
 
-    const baseVaultAccount = await getTokenAccount(provider, baseVault);
+    const baseVaultAccount = await getAccount(provider.connection, baseVault);
     assert.equal(
-      baseVaultAccount.amount.toNumber(),
+      Number(baseVaultAccount.amount),
       numTokens + OPTIONS_AMOUNT,
     );
   });
@@ -320,12 +291,12 @@ describe('staking-options', () => {
       console.log(err);
       assert(false);
     }
-    const userBaseAccountAccount = await getTokenAccount(
-      provider,
+    const userBaseAccountAccount = await getAccount(
+      provider.connection,
       userBaseAccount,
     );
     assert.equal(
-      userBaseAccountAccount.amount.toNumber(),
+      Number(userBaseAccountAccount.amount),
       OPTIONS_AMOUNT,
     );
   });
@@ -341,9 +312,9 @@ describe('staking-options', () => {
       console.log(err);
       assert(false);
     }
-    const userBaseAccountAccount = await getTokenAccount(provider, baseAccount);
+    const userBaseAccountAccount = await getAccount(provider.connection, baseAccount);
     assert.equal(
-      userBaseAccountAccount.amount.toNumber(),
+      Number(userBaseAccountAccount.amount),
       numTokens - OPTIONS_AMOUNT,
     );
   });
