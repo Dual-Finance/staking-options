@@ -7,6 +7,7 @@ import {
   getAssociatedTokenAddress,
 } from '@project-serum/associated-token';
 import { StakingOptions } from '../target/types/staking_options';
+import { Metaplex } from '@metaplex-foundation/js';
 import {
   DEFAULT_MINT_DECIMALS,
   createMint,
@@ -21,6 +22,7 @@ describe('staking-options', () => {
   anchor.setProvider(anchor.Provider.env());
   const provider: Provider = anchor.Provider.env();
   const program = anchor.workspace.StakingOptions as Program<StakingOptions>;
+  const metaplexId = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
   const so = new SO(provider.connection.rpcEndpoint);
 
@@ -41,7 +43,7 @@ describe('staking-options', () => {
   const STRIKE: number = 1_000;
   const OPTIONS_AMOUNT: number = 10_000_000;
   const LOT_SIZE: number = 1_000_000;
-  const SO_NAME: string = 'SO';
+  const SO_NAME: string = 'SO_staking_options_SO';
 
   async function configureSO() {
     console.log('Configuring SO');
@@ -60,7 +62,7 @@ describe('staking-options', () => {
       provider,
       baseMint,
       baseAccount,
-      numTokens,
+      new anchor.BN(numTokens),
       provider.wallet.publicKey,
     );
     if (!quoteMint) {
@@ -139,7 +141,7 @@ describe('staking-options', () => {
       provider,
       baseMint,
       baseAccount,
-      numTokens,
+      new anchor.BN(numTokens),
       provider.wallet.publicKey,
     );
 
@@ -166,7 +168,7 @@ describe('staking-options', () => {
       provider,
       quoteMint,
       userQuoteAccount,
-      OPTIONS_AMOUNT * STRIKE * DEFAULT_MINT_DECIMALS,
+      new anchor.BN(OPTIONS_AMOUNT * STRIKE * DEFAULT_MINT_DECIMALS),
       provider.wallet.publicKey,
     );
 
@@ -223,6 +225,35 @@ describe('staking-options', () => {
     const tx = new Transaction();
     tx.add(instr);
     await provider.send(tx);
+  }
+
+  async function nameToken() {
+    console.log('Naming token');
+
+    const [optionMintMetadataAccount, _optionMintMetadataBump] = (
+      await anchor.web3.PublicKey.findProgramAddress(
+        [
+          Buffer.from(anchor.utils.bytes.utf8.encode('metadata')),
+          metaplexId.toBuffer(),
+          optionMint.toBuffer(),
+        ],
+        metaplexId,
+      ));
+
+    await program.rpc.nameToken(
+      new anchor.BN(STRIKE),
+      {
+        accounts: {
+          authority: provider.wallet.publicKey,
+          state,
+          optionMint,
+          optionMintMetadataAccount,
+          tokenMetadataProgram: metaplexId,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        },
+      },
+    );
   }
 
   it('Config Success', async () => {
@@ -317,5 +348,22 @@ describe('staking-options', () => {
       Number(userBaseAccountAccount.amount),
       numTokens - OPTIONS_AMOUNT,
     );
+  })
+
+  it('Name Token', async () => {
+    try {
+      await configureSO();
+      await initStrike(STRIKE);
+      await nameToken();
+
+      const metaplex = new Metaplex(provider.connection);
+      const nft = await metaplex.nfts().findByMint({ mintAddress: optionMint });
+      // This verifies that the name gets truncated as well as scientific
+      // notation for strike in terms of tokens.
+      assert.equal(nft.name, "DUAL-SO_staking_options-1.00e-3");
+    } catch (err) {
+      console.log(err);
+      assert(false);
+    }
   });
 });

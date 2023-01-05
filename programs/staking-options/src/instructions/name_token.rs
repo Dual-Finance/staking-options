@@ -11,17 +11,16 @@ pub fn name_token(ctx: Context<NameToken>, strike: u64) -> Result<()> {
     let strike_quote_atoms_per_lot_float: f64 = strike as f64;
     let strike_quote_tokens_per_lot_float: f64 = strike_quote_atoms_per_lot_float
         / (u64::pow(10, ctx.accounts.state.quote_decimals as u32) as f64);
-    let strike_quote_tokens_per_token_float: f64 =
-        strike_quote_tokens_per_lot_float / ctx.accounts.state.lot_size as f64;
+    let strike_quote_tokens_per_token_float: f64 = strike_quote_tokens_per_lot_float
+        / ctx.accounts.state.lot_size as f64
+        * (u64::pow(10, ctx.accounts.state.base_decimals as u32) as f64);
 
     let token_name: String = format!(
-        "DUAL-{:.16}-{:.6e}",
+        "DUAL-{:.18}-{:.2e}",
         ctx.accounts.state.so_name, strike_quote_tokens_per_token_float
     );
-    let symbol: String = format!(
-        "DUAL-{:.16}-{:.6e}",
-        ctx.accounts.state.so_name, strike_quote_tokens_per_token_float
-    );
+    let symbol: String = "DUAL-SO".to_string();
+    msg!("Naming token {}", token_name);
 
     msg!("Calling into metaplex for {}", ctx.accounts.state.so_name);
     let ix = mpl_token_metadata::instruction::create_metadata_accounts_v3(
