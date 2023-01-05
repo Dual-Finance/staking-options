@@ -6,17 +6,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: projectserum/build:v0.24.2
+    container: projectserum/build:v0.26.0
 
     steps:
       - uses: actions/checkout@v2
 
       - name: List rustup toolchains
         run: rustup toolchain list
-      - name: Rust version
-        run: rustc --version
-      - name: Rust update
-        run: rustup update stable
       - name: Set default toolchain
         run: rustup default stable
       - name: List rustup toolchains
