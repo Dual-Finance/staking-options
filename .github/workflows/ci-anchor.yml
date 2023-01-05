@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: projectserum/build:v0.26.0
+    container: projectserum/build:v0.25.0
 
     steps:
       - uses: actions/checkout@v2
