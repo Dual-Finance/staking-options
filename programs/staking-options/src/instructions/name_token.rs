@@ -2,12 +2,26 @@ use anchor_spl::token::Mint;
 
 pub use crate::*;
 
-pub fn name_token(
-    ctx: Context<NameToken>,
-    strike: u64
-) -> Result<()> {
+pub fn name_token(ctx: Context<NameToken>, strike: u64) -> Result<()> {
     // Verify the mint
     check_mint!(ctx, strike, bump);
+
+    // Token name is
+    // DUAL-[soName]-[strike converted to lots]
+    let strike_quote_atoms_per_lot_float: f64 = strike as f64;
+    let strike_quote_tokens_per_lot_float: f64 = strike_quote_atoms_per_lot_float
+        / (u64::pow(10, ctx.accounts.state.quote_decimals as u32) as f64);
+    let strike_quote_tokens_per_token_float: f64 =
+        strike_quote_tokens_per_lot_float / ctx.accounts.state.lot_size as f64;
+
+    let token_name: String = format!(
+        "DUAL-{:.16}-{:.6e}",
+        ctx.accounts.state.so_name, strike_quote_tokens_per_token_float
+    );
+    let symbol: String = format!(
+        "DUAL-{:.16}-{:.6e}",
+        ctx.accounts.state.so_name, strike_quote_tokens_per_token_float
+    );
 
     msg!("Calling into metaplex for {}", ctx.accounts.state.so_name);
     let ix = mpl_token_metadata::instruction::create_metadata_accounts_v3(
@@ -17,9 +31,8 @@ pub fn name_token(
         ctx.accounts.option_mint.key(),
         ctx.accounts.authority.key(),
         ctx.accounts.option_mint.key(),
-        // TODO: Truncate SO Name and include lot size and baseMint
-        "DUAL-SO-".to_string() + &ctx.accounts.state.so_name,
-        "DUAL-SO-".to_string() + &ctx.accounts.state.so_name,
+        token_name,
+        symbol,
         "https://www.dual.finance/images/token-logos/staking-options.png".to_string(),
         None,
         0,
@@ -42,10 +55,10 @@ pub fn name_token(
             ctx.accounts.rent.to_account_info(),
         ],
         &[&[
-           SO_MINT_SEED,
-           &ctx.accounts.state.key().to_bytes(),
-           &strike.to_be_bytes(),
-           &[bump],
+            SO_MINT_SEED,
+            &ctx.accounts.state.key().to_bytes(),
+            &strike.to_be_bytes(),
+            &[bump],
         ]],
     )?;
 
