@@ -1,4 +1,4 @@
-use anchor_spl::token::{Mint, Token};
+use anchor_spl::token::Mint;
 
 pub use crate::*;
 
@@ -72,6 +72,5 @@ pub struct NameToken<'info> {
     pub token_metadata_program: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
 }
