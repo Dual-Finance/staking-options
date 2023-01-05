@@ -1,9 +1,8 @@
-import { Program, Provider, BN } from '@project-serum/anchor';
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { Provider, BN } from '@project-serum/anchor';
+import { PublicKey } from '@solana/web3.js';
 
 const anchor = require('@project-serum/anchor');
 const { TokenInstructions } = require('@project-serum/serum');
-const { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, getMint } = require('@solana/spl-token');
 
 export const DEFAULT_MINT_DECIMALS = 6;
 
@@ -84,18 +83,6 @@ export async function createTokenAccount(provider: Provider, mint: PublicKey, ow
   return vault.publicKey;
 }
 
-export async function createAssociatedTokenAccount(
-  provider,
-  mint: PublicKey,
-  owner: PublicKey,
-) {
-  const ata = await getAssociatedTokenAddress(mint, owner);
-  const tx = new anchor.web3.Transaction();
-  tx.add(await createAssociatedTokenAccountInstruction(owner, ata, owner, mint));
-  await provider.send(tx);
-  return ata;
-}
-
 async function createMintToAccountInstrs(
   mint: PublicKey,
   destination: PublicKey,
@@ -130,38 +117,4 @@ export async function mintToAccount(
     )),
   );
   await provider.send(tx, []);
-}
-
-export function parsePriceAndExpiration(buf: Buffer) {
-  // const overhead = buf.readBigUInt64LE(0);
-  const strikePrice = Number(buf.readBigUInt64LE(8));
-  const expiration = Number(buf.readBigUInt64LE(16));
-  const mintPk = new PublicKey(buf.slice(24, 56));
-  return {
-    strikePrice,
-    expiration,
-    spl_mint: mintPk,
-  };
-}
-
-export function toBeBytes(x: number) {
-  const y = Math.floor(x / 2 ** 32);
-  return Uint8Array.from(
-    [y, y << 8, y << 16, y << 24, x, x << 8, x << 16, x << 24].map(
-      (z) => z >>> 24,
-    ),
-  );
-}
-
-export function programPaidBy(provider: Provider, program: Program, payer: Keypair) {
-  const newProvider = new anchor.Provider(
-    provider.connection,
-    new anchor.Wallet(payer),
-    {},
-  );
-  return new anchor.Program(
-    program.idl,
-    program.programId,
-    newProvider,
-  );
 }

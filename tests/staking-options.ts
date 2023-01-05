@@ -6,7 +6,6 @@ import {
   createAssociatedTokenAccount,
   getAssociatedTokenAddress,
 } from '@project-serum/associated-token';
-const { getAccount } = require('@solana/spl-token');
 import { StakingOptions } from '../target/types/staking_options';
 import {
   DEFAULT_MINT_DECIMALS,
@@ -15,6 +14,7 @@ import {
   mintToAccount,
 } from './utils/utils';
 
+const { getAccount } = require('@solana/spl-token');
 const anchor = require('@project-serum/anchor');
 
 describe('staking-options', () => {
