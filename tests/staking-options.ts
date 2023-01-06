@@ -245,6 +245,7 @@ describe('staking-options', () => {
       {
         accounts: {
           authority: provider.wallet.publicKey,
+          payer: provider.wallet.publicKey,
           state,
           optionMint,
           optionMintMetadataAccount,

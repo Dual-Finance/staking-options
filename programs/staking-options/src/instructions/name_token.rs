@@ -28,7 +28,7 @@ pub fn name_token(ctx: Context<NameToken>, strike: u64) -> Result<()> {
         *ctx.accounts.option_mint_metadata_account.key,
         ctx.accounts.option_mint.key(),
         ctx.accounts.option_mint.key(),
-        ctx.accounts.authority.key(),
+        ctx.accounts.payer.key(),
         ctx.accounts.option_mint.key(),
         token_name,
         symbol,
@@ -48,7 +48,7 @@ pub fn name_token(ctx: Context<NameToken>, strike: u64) -> Result<()> {
             ctx.accounts.option_mint_metadata_account.to_account_info(),
             ctx.accounts.option_mint.to_account_info(),
             ctx.accounts.option_mint.to_account_info(),
-            ctx.accounts.authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
             ctx.accounts.option_mint.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
             ctx.accounts.rent.to_account_info(),
@@ -67,8 +67,10 @@ pub fn name_token(ctx: Context<NameToken>, strike: u64) -> Result<()> {
 #[derive(Accounts)]
 #[instruction(strike: u64)]
 pub struct NameToken<'info> {
-    #[account(mut, constraint = authority.key() == state.authority.key())]
+    #[account(constraint = authority.key() == state.authority.key())]
     pub authority: Signer<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
 
     /// State holding all the data for the stake that the staker wants to do.
     pub state: Box<Account<'info, State>>,
