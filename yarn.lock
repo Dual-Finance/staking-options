@@ -34,10 +34,10 @@
     near-api-js "^0.44.2"
     near-seed-phrase "^0.2.0"
 
-"@dual-finance/staking-options@^0.0.16":
-  version "0.0.16"
-  resolved "https://registry.yarnpkg.com/@dual-finance/staking-options/-/staking-options-0.0.16.tgz#46d2e813502914b6e708a873243e3d787043f03a"
-  integrity sha512-IJOfiUMVl7bUeUesuJgQTKLzdwPutvwUNik0kF11JwXetdgWSJp5maEMjx487WXIb5DeWFS60/r7I3dnuMkUNA==
+"@dual-finance/staking-options@^0.0.17":
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/@dual-finance/staking-options/-/staking-options-0.0.17.tgz#e56f7eb8be7d1364ac7fac6e0d0e8b79cab833cf"
+  integrity sha512-ecpHUGjENVUUZJfAtclec5MQU0KwLc6y/1taMxIkk36dAcsV2431kOLayHYRfRFaBph6lVGDzj+OfJHYhsFKEQ==
   dependencies:
     "@project-serum/anchor" "^0.25.0"
     "@solana/spl-token" "^0.3.6"
