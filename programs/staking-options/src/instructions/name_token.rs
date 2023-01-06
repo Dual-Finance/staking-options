@@ -69,6 +69,7 @@ pub fn name_token(ctx: Context<NameToken>, strike: u64) -> Result<()> {
 pub struct NameToken<'info> {
     #[account(constraint = authority.key() == state.authority.key())]
     pub authority: Signer<'info>,
+    #[account(mut)]
     pub payer: Signer<'info>,
 
     /// State holding all the data for the stake that the staker wants to do.
