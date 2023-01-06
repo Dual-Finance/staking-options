@@ -80,8 +80,8 @@ describe('staking-options', () => {
     const instr = await so.createConfigInstruction(
       optionExpiration,
       subscriptionPeriodEnd,
-      numTokens,
-      LOT_SIZE,
+      new anchor.BN(numTokens),
+      new anchor.BN(LOT_SIZE),
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
@@ -101,7 +101,7 @@ describe('staking-options', () => {
     optionMint = await so.soMint(strike, SO_NAME, baseMint);
 
     const instr = await so.createInitStrikeInstruction(
-      strike,
+      new anchor.BN(strike),
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
@@ -122,8 +122,8 @@ describe('staking-options', () => {
     );
 
     const instr = await so.createIssueInstruction(
-      amount,
-      strike,
+      new anchor.BN(amount),
+      new anchor.BN(strike),
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
@@ -146,7 +146,7 @@ describe('staking-options', () => {
     );
 
     const instr = await so.createAddTokensInstruction(
-      OPTIONS_AMOUNT,
+      new anchor.BN(OPTIONS_AMOUNT),
       SO_NAME,
       provider.wallet.publicKey,
       baseAccount,
@@ -199,8 +199,8 @@ describe('staking-options', () => {
     }
 
     const instr = await so.createExerciseInstruction(
-      amount,
-      STRIKE,
+      new anchor.BN(amount),
+      new anchor.BN(STRIKE),
       SO_NAME,
       provider.wallet.publicKey,
       userSoAccount,
@@ -230,31 +230,15 @@ describe('staking-options', () => {
   async function nameToken() {
     console.log('Naming token');
 
-    const [optionMintMetadataAccount, _optionMintMetadataBump] = (
-      await anchor.web3.PublicKey.findProgramAddress(
-        [
-          Buffer.from(anchor.utils.bytes.utf8.encode('metadata')),
-          metaplexId.toBuffer(),
-          optionMint.toBuffer(),
-        ],
-        metaplexId,
-      ));
-
-    await program.rpc.nameToken(
+    const instr = await so.createNameTokenInstruction(
       new anchor.BN(STRIKE),
-      {
-        accounts: {
-          authority: provider.wallet.publicKey,
-          payer: provider.wallet.publicKey,
-          state,
-          optionMint,
-          optionMintMetadataAccount,
-          tokenMetadataProgram: metaplexId,
-          systemProgram: anchor.web3.SystemProgram.programId,
-          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        },
-      },
+      SO_NAME,
+      provider.wallet.publicKey,
+      baseMint,
     );
+    const tx = new Transaction();
+    tx.add(instr);
+    await provider.send(tx);
   }
 
   it('Config Success', async () => {
