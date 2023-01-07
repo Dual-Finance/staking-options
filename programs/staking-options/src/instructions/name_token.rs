@@ -32,7 +32,7 @@ pub fn name_token(ctx: Context<NameToken>, strike: u64) -> Result<()> {
         ctx.accounts.option_mint.key(),
         token_name,
         symbol,
-        "https://www.dual.finance/images/token-logos/staking-options".to_string(),
+        "https://www.dual.finance/images/token-logos/staking-options.json".to_string(),
         None,
         0,
         true,
