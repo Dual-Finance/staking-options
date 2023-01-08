@@ -19,6 +19,8 @@ jobs:
         run: rustup toolchain list
       - name: Generate new keygen
         run: solana-keygen new
+      - name: Update solana
+        run: solana-install update
       - name: Check solana config
         run: solana config get
       - name: Install yarn dependencies
