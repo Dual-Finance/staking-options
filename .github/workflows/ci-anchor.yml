@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: projectserum/build:v0.24.2
+    container: projectserum/build:v0.26.0
 
     steps:
       - uses: actions/checkout@v2
@@ -17,16 +17,8 @@ jobs:
         run: rustup default stable
       - name: List rustup toolchains
         run: rustup toolchain list
-      - name: List dirs
-        run: ls /github
-      - name: List dirs
-        run: ls /github/home
-      - name: List dirs
-        run: ls /github/home/.config
-      - name: List dirs
-        run: ls /github/home/.config/solana/id.json
       - name: Generate new keygen
-        run: solana-keygen new
+        run: solana-keygen new --no-bip39-passphrase 
       - name: Check solana config
         run: solana config get
       - name: Install yarn dependencies
