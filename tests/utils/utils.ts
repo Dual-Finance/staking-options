@@ -1,14 +1,16 @@
-import { Provider, BN } from '@project-serum/anchor';
+import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
-
-const anchor = require('@project-serum/anchor');
-const { TokenInstructions } = require('@project-serum/serum');
+import { TokenInstructions } from '@project-serum/serum';
 
 export const DEFAULT_MINT_DECIMALS = 6;
 
-async function createMintInstructions(provider: Provider, authority: PublicKey, mint: PublicKey) {
+async function createMintInstructions(
+  provider: AnchorProvider,
+  authority: PublicKey,
+  mint: PublicKey,
+) {
   const instructions = [
-    anchor.web3.SystemProgram.createAccount({
+    web3.SystemProgram.createAccount({
       fromPubkey: provider.wallet.publicKey,
       newAccountPubkey: mint,
       space: 82,
@@ -24,29 +26,31 @@ async function createMintInstructions(provider: Provider, authority: PublicKey, 
   return instructions;
 }
 
-export async function createMint(provider: Provider, initialAuthority: PublicKey | undefined) {
+export async function createMint(
+  provider: AnchorProvider,
+  initialAuthority: PublicKey | undefined,
+) {
   let authority = initialAuthority;
   if (authority === undefined) {
     authority = provider.wallet.publicKey;
   }
-  const mint = anchor.web3.Keypair.generate();
+  const mint = web3.Keypair.generate();
   const instructions = await createMintInstructions(
     provider,
     authority,
     mint.publicKey,
   );
 
-  const tx = new anchor.web3.Transaction();
+  const tx = new web3.Transaction();
   tx.add(...instructions);
 
-  await provider.send(tx, [mint]);
-  await new Promise((r) => setTimeout(r, 100));
+  await provider.sendAndConfirm(tx, [mint]);
 
   return mint.publicKey;
 }
 
 async function createTokenAccountInstrs(
-  provider: Provider,
+  provider: AnchorProvider,
   newAccountPubkey: PublicKey,
   mint: PublicKey,
   owner: PublicKey,
@@ -57,7 +61,7 @@ async function createTokenAccountInstrs(
     lamports = await provider.connection.getMinimumBalanceForRentExemption(165);
   }
   return [
-    anchor.web3.SystemProgram.createAccount({
+    web3.SystemProgram.createAccount({
       fromPubkey: provider.wallet.publicKey,
       newAccountPubkey,
       space: 165,
@@ -72,14 +76,17 @@ async function createTokenAccountInstrs(
   ];
 }
 
-export async function createTokenAccount(provider: Provider, mint: PublicKey, owner: PublicKey) {
-  const vault = anchor.web3.Keypair.generate();
-  const tx = new anchor.web3.Transaction();
+export async function createTokenAccount(
+  provider: AnchorProvider,
+  mint: PublicKey,
+  owner: PublicKey,
+) {
+  const vault = web3.Keypair.generate();
+  const tx = new web3.Transaction();
   tx.add(
     ...(await createTokenAccountInstrs(provider, vault.publicKey, mint, owner, undefined)),
   );
-  await provider.send(tx, [vault]);
-  await new Promise((r) => setTimeout(r, 100));
+  await provider.sendAndConfirm(tx, [vault]);
   return vault.publicKey;
 }
 
@@ -100,14 +107,13 @@ async function createMintToAccountInstrs(
 }
 
 export async function mintToAccount(
-  provider: Provider,
+  provider: AnchorProvider,
   mint: PublicKey,
   destination: PublicKey,
   amount: BN,
   mintAuthority: PublicKey,
 ) {
-  // mint authority is the provider
-  const tx = new anchor.web3.Transaction();
+  const tx = new web3.Transaction();
   tx.add(
     ...(await createMintToAccountInstrs(
       mint,
@@ -116,5 +122,5 @@ export async function mintToAccount(
       mintAuthority,
     )),
   );
-  await provider.send(tx, []);
+  await provider.sendAndConfirm(tx, []);
 }
