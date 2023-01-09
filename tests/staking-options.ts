@@ -1,12 +1,14 @@
 import assert from 'assert';
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { Provider, Program } from '@project-serum/anchor';
+import {
+  AnchorProvider, Program, BN, workspace,
+} from '@coral-xyz/anchor';
 import { StakingOptions as SO } from '@dual-finance/staking-options';
 import {
   createAssociatedTokenAccount,
-  getAssociatedTokenAddress,
 } from '@project-serum/associated-token';
 import { Metaplex } from '@metaplex-foundation/js';
+import { getAccount } from '@solana/spl-token';
 import { StakingOptions } from '../target/types/staking_options';
 import {
   DEFAULT_MINT_DECIMALS,
@@ -15,14 +17,12 @@ import {
   mintToAccount,
 } from './utils/utils';
 
-const { getAccount } = require('@solana/spl-token');
-const anchor = require('@project-serum/anchor');
+const anchor = require('@coral-xyz/anchor');
 
 describe('staking-options', () => {
-  anchor.setProvider(anchor.Provider.env());
-  const provider: Provider = anchor.Provider.env();
-  const program = anchor.workspace.StakingOptions as Program<StakingOptions>;
-  const metaplexId = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+  const provider: AnchorProvider = AnchorProvider.local();
+  anchor.setProvider(provider);
+  const program: Program<StakingOptions> = workspace.StakingOptions as Program<StakingOptions>;
 
   const so = new SO(provider.connection.rpcEndpoint);
 
@@ -43,7 +43,7 @@ describe('staking-options', () => {
   const STRIKE: number = 1_000;
   const OPTIONS_AMOUNT: number = 10_000_000;
   const LOT_SIZE: number = 1_000_000;
-  const SO_NAME: string = 'SO_staking_options_SO';
+  let SO_NAME: string = 'SO_staking_options_SO';
 
   async function configureSO() {
     console.log('Configuring SO');
@@ -62,7 +62,7 @@ describe('staking-options', () => {
       provider,
       baseMint,
       baseAccount,
-      new anchor.BN(numTokens),
+      new BN(numTokens),
       provider.wallet.publicKey,
     );
     if (!quoteMint) {
@@ -80,8 +80,8 @@ describe('staking-options', () => {
     const instr = await so.createConfigInstruction(
       optionExpiration,
       subscriptionPeriodEnd,
-      new anchor.BN(numTokens),
-      new anchor.BN(LOT_SIZE),
+      new BN(numTokens),
+      new BN(LOT_SIZE),
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
@@ -92,7 +92,7 @@ describe('staking-options', () => {
 
     const tx = new Transaction();
     tx.add(instr);
-    await provider.send(tx);
+    await provider.sendAndConfirm(tx);
   }
 
   async function initStrike(strike: number) {
@@ -101,7 +101,7 @@ describe('staking-options', () => {
     optionMint = await so.soMint(strike, SO_NAME, baseMint);
 
     const instr = await so.createInitStrikeInstruction(
-      new anchor.BN(strike),
+      new BN(strike),
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
@@ -109,7 +109,7 @@ describe('staking-options', () => {
 
     const tx = new Transaction();
     tx.add(instr);
-    await provider.send(tx);
+    await provider.sendAndConfirm(tx);
   }
 
   async function issue(amount: number, strike: number) {
@@ -122,8 +122,8 @@ describe('staking-options', () => {
     );
 
     const instr = await so.createIssueInstruction(
-      new anchor.BN(amount),
-      new anchor.BN(strike),
+      new BN(amount),
+      new BN(strike),
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
@@ -131,29 +131,28 @@ describe('staking-options', () => {
     );
     const tx = new Transaction();
     tx.add(instr);
-    await provider.send(tx);
+    await provider.sendAndConfirm(tx);
   }
 
   async function addTokens() {
     console.log('Adding tokens');
-    // Top off the number of available tokens for the LSO.
     await mintToAccount(
       provider,
       baseMint,
       baseAccount,
-      new anchor.BN(numTokens),
+      new BN(numTokens),
       provider.wallet.publicKey,
     );
 
     const instr = await so.createAddTokensInstruction(
-      new anchor.BN(OPTIONS_AMOUNT),
+      new BN(OPTIONS_AMOUNT),
       SO_NAME,
       provider.wallet.publicKey,
       baseAccount,
     );
     const tx = new Transaction();
     tx.add(instr);
-    await provider.send(tx);
+    await provider.sendAndConfirm(tx);
   }
 
   async function exercise(amount: number) {
@@ -168,7 +167,7 @@ describe('staking-options', () => {
       provider,
       quoteMint,
       userQuoteAccount,
-      new anchor.BN(OPTIONS_AMOUNT * STRIKE * DEFAULT_MINT_DECIMALS),
+      new BN(OPTIONS_AMOUNT * STRIKE * DEFAULT_MINT_DECIMALS),
       provider.wallet.publicKey,
     );
 
@@ -178,9 +177,7 @@ describe('staking-options', () => {
       provider.wallet.publicKey,
     );
 
-    // Sleep so the account gets created
-    await new Promise((r) => setTimeout(r, 1_000));
-    const feeAccount = await getAssociatedTokenAddress(new PublicKey('7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE'), quoteMint);
+    const feeAccount = await SO.getFeeAccount(quoteMint);
 
     try {
       console.log('Creating ATA', feeAccount.toBase58());
@@ -192,15 +189,15 @@ describe('staking-options', () => {
           quoteMint,
         ),
       );
-      await provider.send(ataTx);
+      await provider.sendAndConfirm(ataTx);
       await new Promise((r) => setTimeout(r, 1_000));
     } catch (err) {
       console.log('Fee account already exists');
     }
 
     const instr = await so.createExerciseInstruction(
-      new anchor.BN(amount),
-      new anchor.BN(STRIKE),
+      new BN(amount),
+      new BN(STRIKE),
       SO_NAME,
       provider.wallet.publicKey,
       userSoAccount,
@@ -209,7 +206,7 @@ describe('staking-options', () => {
     );
     const tx = new Transaction();
     tx.add(instr);
-    await provider.send(tx);
+    await provider.sendAndConfirm(tx);
   }
 
   async function withdraw() {
@@ -224,21 +221,21 @@ describe('staking-options', () => {
     );
     const tx = new Transaction();
     tx.add(instr);
-    await provider.send(tx);
+    await provider.sendAndConfirm(tx);
   }
 
   async function nameToken() {
     console.log('Naming token');
 
     const instr = await so.createNameTokenInstruction(
-      new anchor.BN(STRIKE),
+      new BN(STRIKE),
       SO_NAME,
       provider.wallet.publicKey,
       baseMint,
     );
     const tx = new Transaction();
     tx.add(instr);
-    await provider.send(tx);
+    await provider.sendAndConfirm(tx);
   }
 
   it('Config Success', async () => {
@@ -259,8 +256,11 @@ describe('staking-options', () => {
     assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
     assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
     assert.equal(stateObj.baseMint.toBase58(), baseMint.toBase58());
+    assert.equal(stateObj.quoteMint.toBase58(), quoteMint.toBase58());
     assert.equal(stateObj.quoteAccount.toBase58(), quoteAccount.toBase58());
     assert.equal(stateObj.strikes.length, 0);
+    assert.equal(stateObj.lotSize, LOT_SIZE);
+    assert.equal(stateObj.soName, SO_NAME);
 
     // Verify the tokens are stored.
     const baseVaultAccount = await getAccount(provider.connection, baseVault);
@@ -343,12 +343,26 @@ describe('staking-options', () => {
 
       const metaplex = new Metaplex(provider.connection);
       const nft = await metaplex.nfts().findByMint({ mintAddress: optionMint });
+
       // This verifies that the name gets truncated as well as scientific
       // notation for strike in terms of tokens.
       assert.equal(nft.name, 'DUAL-SO_staking_options-1.00e-3');
+
+      assert.equal(nft.symbol, 'DUAL-SO');
+      assert.equal(nft.uri, 'https://www.dual.finance/images/token-logos/staking-options.json');
     } catch (err) {
       console.log(err);
       assert(false);
+    }
+  });
+
+  it('Config Fail Name Too Long', async () => {
+    SO_NAME = '123456789012345678901234567890123';
+    try {
+      await configureSO();
+      assert(false);
+    } catch (err) {
+      assert(true);
     }
   });
 });

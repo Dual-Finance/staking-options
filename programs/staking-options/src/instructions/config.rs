@@ -12,7 +12,7 @@ pub fn config(
     so_name: String,
 ) -> Result<()> {
     // Verify the SO name is a reasonable length.
-    invariant!(so_name.len() < 64);
+    invariant!(so_name.len() < 32);
 
     // Fill out the State
     ctx.accounts.state.so_name = so_name;
@@ -104,7 +104,6 @@ pub struct Config<'info> {
     /// Mint of quote tokens. Needed for storing the number of decimals.
     pub quote_mint: Box<Account<'info, Mint>>,
 
-    // TODO: Init the fee account
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
