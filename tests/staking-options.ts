@@ -44,12 +44,14 @@ describe('staking-options', () => {
   const OPTIONS_AMOUNT: number = 10_000_000;
   const LOT_SIZE: number = 1_000_000;
   let SO_NAME: string = 'SO_staking_options_SO';
+  const OPTION_EXPIRATION_DELAY_SEC = 100;
 
   async function configureSO() {
     console.log('Configuring SO');
 
-    optionExpiration = Math.floor(Date.now() / 1000 + 100);
-    subscriptionPeriodEnd = optionExpiration;
+    subscriptionPeriodEnd = Math.floor(Date.now() / 1_000 + OPTION_EXPIRATION_DELAY_SEC / 2);
+    optionExpiration = Math.floor(Date.now() / 1_000 + OPTION_EXPIRATION_DELAY_SEC);
+    console.log(`subscriptionPeriodEnd: ${subscriptionPeriodEnd}, optionExpiration: ${optionExpiration}`);
 
     // Use a new BaseMint every run so that there is a new State.
     baseMint = await createMint(provider, undefined);
@@ -190,11 +192,12 @@ describe('staking-options', () => {
         ),
       );
       await provider.sendAndConfirm(ataTx);
-      await new Promise((r) => setTimeout(r, 1_000));
     } catch (err) {
+      console.log(err);
       console.log('Fee account already exists');
     }
 
+    console.log('Creating exercise instruction');
     const instr = await so.createExerciseInstruction(
       new BN(amount),
       new BN(STRIKE),
@@ -209,10 +212,11 @@ describe('staking-options', () => {
     await provider.sendAndConfirm(tx);
   }
 
-  async function withdraw() {
+  async function withdraw(sleep = OPTION_EXPIRATION_DELAY_SEC) {
     console.log('Withdrawing');
-    console.log('Sleeping til options expire');
-    await new Promise((r) => setTimeout(r, 100_000));
+    console.log(`Sleeping til options expire: ${Date.now() / 1_000}`);
+    await new Promise((r) => setTimeout(r, sleep * 1_000));
+    console.log(`Done sleeping: ${Date.now() / 1_000}`);
 
     const instr = await so.createWithdrawInstruction(
       SO_NAME,
@@ -364,5 +368,47 @@ describe('staking-options', () => {
     } catch (err) {
       assert(true);
     }
+
+    // Reset SO_NAME.
+    SO_NAME = 'SO_staking_options_SO';
+  });
+
+  it('Partial Withdraw Success', async () => {
+    try {
+      await configureSO();
+      await initStrike(STRIKE);
+      await issue(OPTIONS_AMOUNT, STRIKE);
+
+      console.log('Attempting partial withdraw');
+      await withdraw(OPTION_EXPIRATION_DELAY_SEC / 2);
+
+      assert.equal(
+        Number((await getAccount(provider.connection, baseAccount)).amount),
+        numTokens - OPTIONS_AMOUNT,
+      );
+
+      console.log('Attempting partial withdraw again');
+      await withdraw(0);
+
+      // No change in the number of tokens
+      assert.equal(
+        Number((await getAccount(provider.connection, baseAccount)).amount),
+        numTokens - OPTIONS_AMOUNT,
+      );
+
+      console.log('Final withdraw');
+      await withdraw(OPTION_EXPIRATION_DELAY_SEC / 2);
+
+      assert.equal(
+        Number((await getAccount(provider.connection, baseAccount)).amount),
+        numTokens,
+      );
+    } catch (err) {
+      console.log(err);
+      assert(false);
+    }
+
+    console.log('Verifying state removed');
+    assert(await provider.connection.getAccountInfo(state) === null);
   });
 });
