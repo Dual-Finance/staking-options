@@ -49,9 +49,9 @@ describe('staking-options', () => {
   async function configureSO() {
     console.log('Configuring SO');
 
-    subscriptionPeriodEnd =  Math.floor(Date.now() / 1_000 + OPTION_EXPIRATION_DELAY_SEC / 2);
+    subscriptionPeriodEnd = Math.floor(Date.now() / 1_000 + OPTION_EXPIRATION_DELAY_SEC / 2);
     optionExpiration = Math.floor(Date.now() / 1_000 + OPTION_EXPIRATION_DELAY_SEC);
-    console.log(`subscriptionPeriodEnd: ${subscriptionPeriodEnd}, optionExpiration: ${optionExpiration}`)
+    console.log(`subscriptionPeriodEnd: ${subscriptionPeriodEnd}, optionExpiration: ${optionExpiration}`);
 
     // Use a new BaseMint every run so that there is a new State.
     baseMint = await createMint(provider, undefined);
@@ -212,7 +212,7 @@ describe('staking-options', () => {
     await provider.sendAndConfirm(tx);
   }
 
-  async function withdraw(sleep=OPTION_EXPIRATION_DELAY_SEC) {
+  async function withdraw(sleep = OPTION_EXPIRATION_DELAY_SEC) {
     console.log('Withdrawing');
     console.log(`Sleeping til options expire: ${Date.now() / 1_000}`);
     await new Promise((r) => setTimeout(r, sleep * 1_000));
