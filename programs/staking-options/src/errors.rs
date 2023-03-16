@@ -18,4 +18,12 @@ pub enum ErrorCode {
     IncorrectFeeAccount,
     #[msg("Not enough tokens to issue the SO")]
     NotEnoughTokens,
+    #[msg("Incorrect Authority")]
+    IncorrectAuthority,
+    #[msg("Too many strikes")]
+    TooManyStrikes,
+    #[msg("Invalid expiration")]
+    InvalidExpiration,
+    #[msg("Invalid name")]
+    InvalidName,
 }

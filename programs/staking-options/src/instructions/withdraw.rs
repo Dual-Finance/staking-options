@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::AccountsClose;
 use anchor_spl::token::{Token, TokenAccount};
-use vipers::prelude::*;
 
 pub use crate::common::*;
 
@@ -84,8 +83,8 @@ pub struct Withdraw<'info> {
 
 impl<'info> Withdraw<'info> {
     pub fn validate_accounts(&self) -> Result<()> {
-        // Verify the authority to init strike against the state authority.
-        assert_keys_eq!(self.authority, self.state.authority);
+        // Verify the authority to withdraw against the state authority.
+        require_keys_eq!(self.authority.key(), self.state.authority);
 
         // Verify that subscription period has ended.
         check_expired!(self.state.subscription_period_end);

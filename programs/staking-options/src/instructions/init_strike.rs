@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
-use vipers::prelude::*;
 
+pub use crate::ErrorCode::TooManyStrikes;
 pub use crate::common::*;
 
 pub fn init_strike(ctx: Context<InitStrike>, strike: u64) -> Result<()> {
@@ -45,13 +45,13 @@ pub struct InitStrike<'info> {
 impl<'info> InitStrike<'info> {
     pub fn validate_accounts(&self, _strike: u64) -> Result<()> {
         // Verify the authority to init strike against the state authority
-        assert_keys_eq!(self.authority, self.state.authority);
+        require_keys_eq!(self.authority.key(), self.state.authority);
 
         // Verify that it is not already expired
         check_not_expired!(self.state.subscription_period_end);
 
         // Make sure there are not too many strikes already.
-        invariant!(self.state.strikes.len() < 100);
+        require!(self.state.strikes.len() < 100, TooManyStrikes);
 
         Ok(())
     }
@@ -101,13 +101,13 @@ pub struct InitStrikeWithPayer<'info> {
 impl<'info> InitStrikeWithPayer<'info> {
     pub fn validate_accounts(&self, _strike: u64) -> Result<()> {
         // Verify the authority to init strike against the state authority
-        assert_keys_eq!(self.authority, self.state.authority);
+        require_keys_eq!(self.authority.key(), self.state.authority);
 
         // Verify that it is not already expired
         check_not_expired!(self.state.subscription_period_end);
 
         // Make sure there are not too many strikes already.
-        invariant!(self.state.strikes.len() < 100);
+        require!(self.state.strikes.len() < 100, TooManyStrikes);
 
         Ok(())
     }

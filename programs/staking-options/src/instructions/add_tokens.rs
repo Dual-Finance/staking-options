@@ -1,6 +1,6 @@
 use anchor_spl::token;
 use anchor_spl::token::{Token, TokenAccount};
-use vipers::prelude::*;
+use crate::ErrorCode::WrongMint;
 
 use crate::*;
 
@@ -17,11 +17,11 @@ pub fn add_tokens(ctx: Context<AddTokens>, num_tokens_to_add: u64) -> Result<()>
     token::transfer(cpi_ctx, num_tokens_to_add)?;
 
     // Update the state to reflect the newly available tokens for options.
-    ctx.accounts.state.options_available = unwrap_int!(ctx
+    ctx.accounts.state.options_available = ctx
         .accounts
         .state
         .options_available
-        .checked_add(num_tokens_to_add));
+        .checked_add(num_tokens_to_add).unwrap();
 
     Ok(())
 }
@@ -63,7 +63,7 @@ impl<'info> AddTokens<'info> {
 
         // Check that the token type matches the mint in the SO state that is
         // getting credited.
-        assert_keys_eq!(self.base_account.mint, self.state.base_mint, WrongMint);
+        require_keys_eq!(self.base_account.mint, self.state.base_mint, WrongMint);
 
         // Do not allow adding tokens to an SO that is expired already.
         check_not_expired!(self.state.subscription_period_end);

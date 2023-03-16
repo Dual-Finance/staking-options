@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use vipers::prelude::*;
 
 #[macro_use]
 mod macros;
@@ -10,6 +9,7 @@ mod instructions;
 
 pub use crate::common::*;
 pub use crate::errors::ErrorCode;
+pub use crate::ErrorCode::InvalidMint;
 pub use crate::instructions::*;
 
 #[cfg(not(feature = "no-entrypoint"))]

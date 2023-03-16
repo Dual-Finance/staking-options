@@ -1,6 +1,7 @@
 use anchor_spl::token;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
+pub use crate::ErrorCode::InvalidName;
 pub use crate::*;
 
 pub fn config(
@@ -12,11 +13,12 @@ pub fn config(
     so_name: String,
 ) -> Result<()> {
     // Verify the SO name is a reasonable length.
-    invariant!(so_name.len() < 32);
+    require!(so_name.len() < 32, InvalidName);
 
     // Fill out the State
     ctx.accounts.state.so_name = so_name;
     ctx.accounts.state.authority = ctx.accounts.so_authority.key();
+    ctx.accounts.state.issue_authority = ctx.accounts.issue_authority.key();
     ctx.accounts.state.options_available = num_tokens;
     ctx.accounts.state.option_expiration = option_expiration;
     ctx.accounts.state.subscription_period_end = subscription_period_end;
@@ -52,9 +54,13 @@ pub struct Config<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    /// The authority that will be required for issuing and withdrawing.
+    /// The authority that will be required init strike and withdrawing.
     /// CHECK: Only used for comparing signers. Will be used in later transactions.
     pub so_authority: AccountInfo<'info>,
+
+    /// An authority that can be used for issuing tokens. Should be a PDA.
+    /// CHECK: Only used for comparing signers. Will be used in later transactions.
+    pub issue_authority: AccountInfo<'info>,
 
     /// State holding all the data for the stake that the staker wants to do.
     #[account(
@@ -77,7 +83,8 @@ pub struct Config<'info> {
           1 + 1 +   // bumps
           8 +       // strikes overhead
           8 * 100 + // strikes
-          100       // unused bytes for future upgrades
+          32 +      // issue_authority
+          68        // unused bytes for future upgrades
     )]
     pub state: Box<Account<'info, State>>,
 
@@ -116,8 +123,8 @@ impl<'info> Config<'info> {
         subscription_period_end: u64,
     ) -> Result<()> {
         // Verify the type of token matches input
-        assert_keys_eq!(self.base_mint, self.base_account.mint.key());
-        assert_keys_eq!(self.quote_mint, self.quote_account.mint.key());
+        require_keys_eq!(self.base_mint.key(), self.base_account.mint.key());
+        require_keys_eq!(self.quote_mint.key(), self.quote_account.mint.key());
 
         // num_tokens is verified by the token program doing the transfer.
 
@@ -125,7 +132,7 @@ impl<'info> Config<'info> {
         check_not_expired!(option_expiration);
         check_not_expired!(subscription_period_end);
 
-        invariant!(subscription_period_end <= option_expiration);
+        require!(subscription_period_end <= option_expiration, InvalidExpiration);
 
         // Cannot verify the token type of the quote_account because it could be
         // something else for downside SO.

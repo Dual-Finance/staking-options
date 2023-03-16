@@ -1,12 +1,13 @@
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
+pub use crate::ErrorCode::IncorrectAuthority;
 pub use crate::*;
 
 pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
     // Verify the mint is at the right address
     check_mint!(ctx, strike, bump);
 
-    let amount_lots: u64 = unwrap_int!(amount.checked_div(ctx.accounts.state.lot_size));
+    let amount_lots: u64 = amount.checked_div(ctx.accounts.state.lot_size).unwrap();
 
     anchor_spl::token::mint_to(
         CpiContext::new_with_signer(
@@ -28,7 +29,7 @@ pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
 
     // Update state to reflect the number of available tokens
     ctx.accounts.state.options_available =
-        unwrap_int!(ctx.accounts.state.options_available.checked_sub(amount));
+        ctx.accounts.state.options_available.checked_sub(amount).unwrap();
 
     Ok(())
 }
@@ -61,14 +62,19 @@ pub struct Issue<'info> {
 
 impl<'info> Issue<'info> {
     pub fn validate_accounts(&self, amount: u64) -> Result<()> {
-        // Verify the authority signer matches state authority
-        assert_keys_eq!(self.authority, self.state.authority);
+        // Verify the authority signer matches state authority. in this case, it
+        // can be the issue authority or the so authority.
+        require!(
+            self.authority.key.to_bytes() == self.state.authority.to_bytes()
+                || self.authority.key.to_bytes() == self.state.issue_authority.to_bytes(),
+                IncorrectAuthority
+        );
 
         // Verify subscription period
         check_not_expired!(self.state.subscription_period_end);
 
         // Make sure there are enough tokens to back the options.
-        invariant!(self.state.options_available >= amount, NotEnoughTokens);
+        require!(self.state.options_available >= amount, NotEnoughTokens);
 
         // Do not need to verify the SO mint is at the right address. The
         // authority check is sufficient. If a different mint was somehow
