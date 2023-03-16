@@ -25,6 +25,16 @@ jobs:
         run: |
           yarn install
           yarn add ts-mocha
+      - name: Solana version
+        run: solana --version
+      - name: Upgrade solana
+        run: sh -c "$(curl -sSfL https://release.solana.com/v1.14.2/install)"
+      - name: Update path
+        run: echo "/github/home/.local/share/solana/install/active_release/bin:$PATH" >> $GITHUB_PATH
+      - name: Echo path
+        run: echo $PATH
+      - name: Solana version
+        run: solana --version
       - name: Build
         run: anchor build
 
