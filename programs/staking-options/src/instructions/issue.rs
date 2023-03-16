@@ -1,6 +1,5 @@
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
-pub use crate::ErrorCode::IncorrectAuthority;
 pub use crate::*;
 
 pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
@@ -67,14 +66,14 @@ impl<'info> Issue<'info> {
         require!(
             self.authority.key.to_bytes() == self.state.authority.to_bytes()
                 || self.authority.key.to_bytes() == self.state.issue_authority.to_bytes(),
-                IncorrectAuthority
+                SOErrorCode::IncorrectAuthority
         );
 
         // Verify subscription period
         check_not_expired!(self.state.subscription_period_end);
 
         // Make sure there are enough tokens to back the options.
-        require!(self.state.options_available >= amount, NotEnoughTokens);
+        require!(self.state.options_available >= amount, SOErrorCode::NotEnoughTokens);
 
         // Do not need to verify the SO mint is at the right address. The
         // authority check is sufficient. If a different mint was somehow

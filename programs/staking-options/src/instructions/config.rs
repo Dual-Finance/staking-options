@@ -1,7 +1,6 @@
 use anchor_spl::token;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
-pub use crate::ErrorCode::InvalidName;
 pub use crate::*;
 
 pub fn config(
@@ -13,7 +12,7 @@ pub fn config(
     so_name: String,
 ) -> Result<()> {
     // Verify the SO name is a reasonable length.
-    require!(so_name.len() < 32, InvalidName);
+    require!(so_name.len() < 32, SOErrorCode::InvalidName);
 
     // Fill out the State
     ctx.accounts.state.so_name = so_name;
@@ -132,7 +131,7 @@ impl<'info> Config<'info> {
         check_not_expired!(option_expiration);
         check_not_expired!(subscription_period_end);
 
-        require!(subscription_period_end <= option_expiration, InvalidExpiration);
+        require!(subscription_period_end <= option_expiration, SOErrorCode::InvalidExpiration);
 
         // Cannot verify the token type of the quote_account because it could be
         // something else for downside SO.

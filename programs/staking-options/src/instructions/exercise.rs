@@ -1,6 +1,5 @@
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
-pub use crate::ErrorCode::IncorrectFeeAccount;
 pub use crate::*;
 
 pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result<()> {
@@ -151,7 +150,7 @@ impl<'info> Exercise<'info> {
         require_keys_eq!(
             self.state.quote_account.key(),
             self.project_quote_account.key(),
-            IncorrectFeeAccount
+            SOErrorCode::IncorrectFeeAccount
         );
 
         // Verify that it is owned by DUAL.

@@ -2,7 +2,7 @@ macro_rules! check_not_expired {
     ($expiration:expr) => {
         require!(
             Clock::get().unwrap().unix_timestamp as u64 <= $expiration,
-            Expired
+            SOErrorCode::Expired
         );
     };
 }
@@ -11,7 +11,7 @@ macro_rules! check_expired {
     ($expiration:expr) => {
         require!(
             Clock::get().unwrap().unix_timestamp as u64 > $expiration,
-            NotYetExpired
+            SOErrorCode::NotYetExpired
         );
     };
 }
@@ -28,7 +28,7 @@ macro_rules! check_mint {
             $ctx.program_id,
         );
 
-        require_keys_eq!($ctx.accounts.option_mint.key(), expected_mint, InvalidMint);
+        require_keys_eq!($ctx.accounts.option_mint.key(), expected_mint, SOErrorCode::InvalidMint);
         let $bump = mint_bump;
     };
 }

@@ -1,7 +1,6 @@
-use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
 
-pub use crate::ErrorCode::TooManyStrikes;
+pub use crate::*;
 pub use crate::common::*;
 
 pub fn init_strike(ctx: Context<InitStrike>, strike: u64) -> Result<()> {
@@ -51,7 +50,7 @@ impl<'info> InitStrike<'info> {
         check_not_expired!(self.state.subscription_period_end);
 
         // Make sure there are not too many strikes already.
-        require!(self.state.strikes.len() < 100, TooManyStrikes);
+        require!(self.state.strikes.len() < 100, SOErrorCode::TooManyStrikes);
 
         Ok(())
     }
@@ -107,7 +106,7 @@ impl<'info> InitStrikeWithPayer<'info> {
         check_not_expired!(self.state.subscription_period_end);
 
         // Make sure there are not too many strikes already.
-        require!(self.state.strikes.len() < 100, TooManyStrikes);
+        require!(self.state.strikes.len() < 100, SOErrorCode::TooManyStrikes);
 
         Ok(())
     }

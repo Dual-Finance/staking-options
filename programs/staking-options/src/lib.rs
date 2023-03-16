@@ -8,8 +8,7 @@ mod errors;
 mod instructions;
 
 pub use crate::common::*;
-pub use crate::errors::ErrorCode;
-pub use crate::ErrorCode::InvalidMint;
+pub use crate::errors::SOErrorCode;
 pub use crate::instructions::*;
 
 #[cfg(not(feature = "no-entrypoint"))]

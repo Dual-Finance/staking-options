@@ -1,6 +1,5 @@
 use anchor_spl::token;
 use anchor_spl::token::{Token, TokenAccount};
-use crate::ErrorCode::WrongMint;
 
 use crate::*;
 
@@ -63,7 +62,7 @@ impl<'info> AddTokens<'info> {
 
         // Check that the token type matches the mint in the SO state that is
         // getting credited.
-        require_keys_eq!(self.base_account.mint, self.state.base_mint, WrongMint);
+        require_keys_eq!(self.base_account.mint, self.state.base_mint, SOErrorCode::WrongMint);
 
         // Do not allow adding tokens to an SO that is expired already.
         check_not_expired!(self.state.subscription_period_end);

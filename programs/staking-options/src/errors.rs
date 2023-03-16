@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum ErrorCode {
+pub enum SOErrorCode {
     #[msg("The mint in the SO state did not match the token type being received")]
     WrongMint,
     #[msg("Expired")]
