@@ -52,6 +52,5 @@ pub struct State {
     // authority above. This is useful in the case where a DAO is the one doing
     // the config, initStrike, withdraw, but a program is doing the issuing.
     pub issue_authority: Pubkey,
-
     // Padding of variable length.
 }

@@ -135,7 +135,10 @@ impl<'info> ConfigV2<'info> {
         check_not_expired!(option_expiration);
         check_not_expired!(subscription_period_end);
 
-        require!(subscription_period_end <= option_expiration, SOErrorCode::InvalidExpiration);
+        require!(
+            subscription_period_end <= option_expiration,
+            SOErrorCode::InvalidExpiration
+        );
 
         // Cannot verify the token type of the quote_account because it could be
         // something else for downside SO.
@@ -268,7 +271,10 @@ impl<'info> Config<'info> {
         check_not_expired!(option_expiration);
         check_not_expired!(subscription_period_end);
 
-        require!(subscription_period_end <= option_expiration, SOErrorCode::InvalidExpiration);
+        require!(
+            subscription_period_end <= option_expiration,
+            SOErrorCode::InvalidExpiration
+        );
 
         // Cannot verify the token type of the quote_account because it could be
         // something else for downside SO.

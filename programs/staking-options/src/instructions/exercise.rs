@@ -88,7 +88,9 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
                 &[ctx.accounts.state.vault_bump],
             ]],
         ),
-        amount_lots.checked_mul(ctx.accounts.state.lot_size).unwrap(),
+        amount_lots
+            .checked_mul(ctx.accounts.state.lot_size)
+            .unwrap(),
     )?;
 
     Ok(())

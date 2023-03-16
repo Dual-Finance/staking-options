@@ -28,7 +28,11 @@ macro_rules! check_mint {
             $ctx.program_id,
         );
 
-        require_keys_eq!($ctx.accounts.option_mint.key(), expected_mint, SOErrorCode::InvalidMint);
+        require_keys_eq!(
+            $ctx.accounts.option_mint.key(),
+            expected_mint,
+            SOErrorCode::InvalidMint
+        );
         let $bump = mint_bump;
     };
 }

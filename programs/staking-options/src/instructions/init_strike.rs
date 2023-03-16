@@ -1,7 +1,7 @@
 use anchor_spl::token::{Mint, Token};
 
-pub use crate::*;
 pub use crate::common::*;
+pub use crate::*;
 
 pub fn init_strike(ctx: Context<InitStrike>, strike: u64) -> Result<()> {
     ctx.accounts.state.strikes.push(strike);

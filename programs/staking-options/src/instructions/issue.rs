@@ -27,8 +27,12 @@ pub fn issue(ctx: Context<Issue>, amount: u64, strike: u64) -> Result<()> {
     )?;
 
     // Update state to reflect the number of available tokens
-    ctx.accounts.state.options_available =
-        ctx.accounts.state.options_available.checked_sub(amount).unwrap();
+    ctx.accounts.state.options_available = ctx
+        .accounts
+        .state
+        .options_available
+        .checked_sub(amount)
+        .unwrap();
 
     Ok(())
 }
@@ -66,14 +70,17 @@ impl<'info> Issue<'info> {
         require!(
             self.authority.key.to_bytes() == self.state.authority.to_bytes()
                 || self.authority.key.to_bytes() == self.state.issue_authority.to_bytes(),
-                SOErrorCode::IncorrectAuthority
+            SOErrorCode::IncorrectAuthority
         );
 
         // Verify subscription period
         check_not_expired!(self.state.subscription_period_end);
 
         // Make sure there are enough tokens to back the options.
-        require!(self.state.options_available >= amount, SOErrorCode::NotEnoughTokens);
+        require!(
+            self.state.options_available >= amount,
+            SOErrorCode::NotEnoughTokens
+        );
 
         // Do not need to verify the SO mint is at the right address. The
         // authority check is sufficient. If a different mint was somehow

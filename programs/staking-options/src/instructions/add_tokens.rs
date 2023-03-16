@@ -20,7 +20,8 @@ pub fn add_tokens(ctx: Context<AddTokens>, num_tokens_to_add: u64) -> Result<()>
         .accounts
         .state
         .options_available
-        .checked_add(num_tokens_to_add).unwrap();
+        .checked_add(num_tokens_to_add)
+        .unwrap();
 
     Ok(())
 }
@@ -62,7 +63,11 @@ impl<'info> AddTokens<'info> {
 
         // Check that the token type matches the mint in the SO state that is
         // getting credited.
-        require_keys_eq!(self.base_account.mint, self.state.base_mint, SOErrorCode::WrongMint);
+        require_keys_eq!(
+            self.base_account.mint,
+            self.state.base_mint,
+            SOErrorCode::WrongMint
+        );
 
         // Do not allow adding tokens to an SO that is expired already.
         check_not_expired!(self.state.subscription_period_end);
