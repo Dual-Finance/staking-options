@@ -47,5 +47,10 @@ pub struct State {
     // Vector of all strikes for an SO. Limit 100. For monitoring only.
     // A strike is number of quote atoms per lot.
     pub strikes: Vec<u64>,
-    // Padding
+
+    // If present, this issue authority is allowed to issue in addition to the
+    // authority above. This is useful in the case where a DAO is the one doing
+    // the config, initStrike, withdraw, but a program is doing the issuing.
+    pub issue_authority: Pubkey,
+    // Padding of variable length.
 }

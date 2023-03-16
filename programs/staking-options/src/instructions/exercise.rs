@@ -28,14 +28,14 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
     )?;
 
     // Take the Quote Token payment
-    let payment: u64 = unwrap_int!(amount_lots.checked_mul(strike));
+    let payment: u64 = amount_lots.checked_mul(strike).unwrap();
 
     // Charge fee when it is not DUAL DAO is exercising.
     if ctx.accounts.user_quote_account.owner.key().to_string()
         != "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
     {
         // 3.5% fee.
-        let fee: u64 = unwrap_int!(unwrap_int!(payment.checked_mul(35)).checked_div(1_000));
+        let fee: u64 = payment.checked_mul(35).unwrap().checked_div(1_000).unwrap();
         anchor_spl::token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -45,7 +45,7 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
                     authority: ctx.accounts.authority.to_account_info().clone(),
                 },
             ),
-            unwrap_int!(payment.checked_sub(fee)),
+            payment.checked_sub(fee).unwrap(),
         )?;
         anchor_spl::token::transfer(
             CpiContext::new(
@@ -88,7 +88,9 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
                 &[ctx.accounts.state.vault_bump],
             ]],
         ),
-        unwrap_int!(amount_lots.checked_mul(ctx.accounts.state.lot_size)),
+        amount_lots
+            .checked_mul(ctx.accounts.state.lot_size)
+            .unwrap(),
     )?;
 
     Ok(())
@@ -147,14 +149,14 @@ impl<'info> Exercise<'info> {
     pub fn validate_accounts(&self, _amount: u64, _strike: u64) -> Result<()> {
         // Verify the address of quote accounts. Because this account matches,
         // the token type will also be verified by the token program.
-        assert_keys_eq!(
-            self.state.quote_account,
-            self.project_quote_account,
-            IncorrectFeeAccount
+        require_keys_eq!(
+            self.state.quote_account.key(),
+            self.project_quote_account.key(),
+            SOErrorCode::IncorrectFeeAccount
         );
 
         // Verify that it is owned by DUAL.
-        assert_eq!(
+        require_eq!(
             self.fee_quote_account.owner.key().to_string(),
             "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
         );
