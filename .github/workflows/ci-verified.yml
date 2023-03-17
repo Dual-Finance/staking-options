@@ -18,7 +18,7 @@ jobs:
 
       - name: Install Anchor CLI
         run: |
-          npm install -g @project-serum/anchor-cli@${{ env.ANCHOR_CLI_VERSION }}
+          npm install -g @coral-xyz/anchor-cli@${{ env.ANCHOR_CLI_VERSION }}
           anchor --version
       - name: Verifiable Build
         run: |
