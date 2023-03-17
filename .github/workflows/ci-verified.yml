@@ -23,7 +23,7 @@ jobs:
       - name: Verifiable Build
         run: |
           echo "APP_NAME=$(cargo metadata --no-deps --format-version 1 | jq --raw-output '.packages[0].name')" >> $GITHUB_ENV 
-          anchor build --verifiable
+          anchor build --verifiable --docker-image projectserum/build:v0.27.0
       - name: Generate Checksum
         run: |
           echo "CHECKSUM=$(sha256sum ./target/verifiable/${{ env.APP_NAME }}.so | head -c 64)" >> $GITHUB_ENV
