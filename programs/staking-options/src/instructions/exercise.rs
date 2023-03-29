@@ -30,9 +30,11 @@ pub fn exercise(ctx: Context<Exercise>, amount_lots: u64, strike: u64) -> Result
     // Take the Quote Token payment
     let payment: u64 = amount_lots.checked_mul(strike).unwrap();
 
-    // Charge fee when it is not DUAL DAO is exercising.
+    // Charge fee when it is not Dual DAO or Dual Labs RM is exercising.
     if ctx.accounts.user_quote_account.owner.key().to_string()
         != "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
+        && ctx.accounts.user_quote_account.owner.key().to_string()
+            != "CkcJx7Uwgxck5zm3DqUp2N1ikkkoPn2wA8zf7oS4tFSZ"
     {
         // 3.5% fee.
         let fee: u64 = payment.checked_mul(35).unwrap().checked_div(1_000).unwrap();
