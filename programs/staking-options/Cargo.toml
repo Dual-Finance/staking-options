@@ -1,6 +1,6 @@
 [package]
 name = "staking_options"
-version = "0.0.9"
+version = "0.1.0"
 description = "Staking options from dual finance"
 edition = "2018"
 license = "Apache-2.0"
@@ -21,5 +21,5 @@ anchor-lang = "0.27.0"
 anchor-spl = "0.27.0"
 mpl-token-metadata =  {version = "1.4.0", features = ["no-entrypoint"]}
 solana-security-txt = "1.0.1"
-solana-program = "1.9.13"
+solana-program = ">1.9.13"
 spl-token = {version = "3.1.1", features = ["no-entrypoint"]}
