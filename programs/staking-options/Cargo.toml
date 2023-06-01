@@ -1,6 +1,6 @@
 [package]
 name = "staking_options"
-version = "0.1.0"
+version = "0.1.1"
 description = "Staking options from dual finance"
 edition = "2018"
 license = "Apache-2.0"

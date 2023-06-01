@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 pub const SO_CONFIG_SEED: &[u8] = b"so-config";
 pub const SO_VAULT_SEED: &[u8] = b"so-vault";
 pub const SO_MINT_SEED: &[u8] = b"so-mint";
+pub const DUAL_DAO_ADDRESS: &str = "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE";
 
 #[account]
 pub struct State {
