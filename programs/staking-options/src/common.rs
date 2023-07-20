@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 pub const SO_CONFIG_SEED: &[u8] = b"so-config";
 pub const SO_VAULT_SEED: &[u8] = b"so-vault";
 pub const SO_MINT_SEED: &[u8] = b"so-mint";
+pub const SO_REVERSE_MINT_SEED: &[u8] = b"so-reverse-mint";
 
 #[account]
 pub struct State {
@@ -52,5 +53,4 @@ pub struct State {
     // authority above. This is useful in the case where a DAO is the one doing
     // the config, initStrike, withdraw, but a program is doing the issuing.
     pub issue_authority: Pubkey,
-    // Padding of variable length.
 }

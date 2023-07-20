@@ -76,9 +76,35 @@ pub mod staking_options {
         )
     }
 
+    // Same as config_v2 except initializes an account to hold quote tokens for
+    // reversible options.
+    #[access_control(ctx.accounts.validate_accounts(option_expiration, subscription_period_end))]
+    pub fn config_v3(
+        ctx: Context<ConfigV3>,
+        option_expiration: u64,
+        subscription_period_end: u64,
+        num_tokens: u64,
+        lot_size: u64,
+        so_name: String,
+    ) -> Result<()> {
+        config::config_v3(
+            ctx,
+            option_expiration,
+            subscription_period_end,
+            num_tokens,
+            lot_size,
+            so_name,
+        )
+    }
+
     #[access_control(ctx.accounts.validate_accounts(amount, strike))]
     pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> {
         exercise::exercise(ctx, amount, strike)
+    }
+
+    #[access_control(ctx.accounts.validate_accounts(amount, strike))]
+    pub fn exercise_reversible(ctx: Context<ExerciseReversible>, amount: u64, strike: u64) -> Result<()> {
+        exercise::exercise_reversible(ctx, amount, strike)
     }
 
     #[access_control(ctx.accounts.validate_accounts(strike))]
@@ -89,6 +115,11 @@ pub mod staking_options {
     #[access_control(ctx.accounts.validate_accounts(strike))]
     pub fn init_strike_with_payer(ctx: Context<InitStrikeWithPayer>, strike: u64) -> Result<()> {
         init_strike::init_strike_with_payer(ctx, strike)
+    }
+
+    #[access_control(ctx.accounts.validate_accounts(strike))]
+    pub fn init_strike_reversible(ctx: Context<InitStrikeReversible>, strike: u64) -> Result<()> {
+        init_strike::init_strike_reversible(ctx, strike)
     }
 
     #[access_control(ctx.accounts.validate_accounts(amount))]

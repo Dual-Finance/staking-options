@@ -75,7 +75,7 @@ pub struct NameToken<'info> {
     /// State holding all the data for the stake that the staker wants to do.
     pub state: Box<Account<'info, State>>,
 
-    /// Mint of base tokens.
+    /// Mint of option tokens.
     pub option_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: This is not dangerous. Checked by metaplex
