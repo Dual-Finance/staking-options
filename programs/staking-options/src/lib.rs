@@ -135,4 +135,9 @@ pub mod staking_options {
     pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
         withdraw::withdraw(ctx)
     }
+
+    #[access_control(ctx.accounts.validate_accounts())]
+    pub fn withdraw_all(ctx: Context<WithdrawAll>, quote_vault_bump: u8) -> Result<()> {
+        withdraw::withdraw_all(ctx, quote_vault_bump)
+    }
 }

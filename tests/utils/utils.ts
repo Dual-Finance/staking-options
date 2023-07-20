@@ -124,3 +124,12 @@ export async function mintToAccount(
   );
   await provider.sendAndConfirm(tx, []);
 }
+
+export function toBeBytes(x: number) {
+  const y = Math.floor(x / 2 ** 32);
+  return Uint8Array.from(
+    [y, y << 8, y << 16, y << 24, x, x << 8, x << 16, x << 24].map(
+      (z) => z >>> 24,
+    ),
+  );
+}
