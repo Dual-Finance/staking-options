@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 pub const SO_CONFIG_SEED: &[u8] = b"so-config";
 pub const SO_VAULT_SEED: &[u8] = b"so-vault";
+pub const SO_REVERSE_VAULT_SEED: &[u8] = b"so-reverse-vault";
 pub const SO_MINT_SEED: &[u8] = b"so-mint";
 pub const SO_REVERSE_MINT_SEED: &[u8] = b"so-reverse-mint";
 
@@ -27,7 +28,7 @@ pub struct State {
     // Number of decimals for the base token as well as SO.
     pub base_decimals: u8,
 
-    // Number of decimals for the quote token.
+    // TODO: Change this to be the quote_vault_bump.
     pub quote_decimals: u8,
 
     // Mint of the project token

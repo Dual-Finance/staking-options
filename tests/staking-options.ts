@@ -540,9 +540,9 @@ describe('staking-options', () => {
       baseVault = await so.baseVault(SO_NAME, baseMint);
       const [quoteVault, quoteVaultBump] = web3.PublicKey.findProgramAddressSync(
         [
-          Buffer.from(utils.bytes.utf8.encode('so-vault')),
+          Buffer.from(utils.bytes.utf8.encode('so-reverse-vault')),
           Buffer.from(utils.bytes.utf8.encode(SO_NAME)),
-          quoteMint.toBuffer(),
+          baseMint.toBuffer(),
         ],
         program.programId,
       );
@@ -652,6 +652,7 @@ describe('staking-options', () => {
       const reversibleExerciseInstr = program.instruction.exerciseReversible(
         new BN(OPTIONS_AMOUNT / LOT_SIZE),
         new BN(STRIKE),
+        new BN(quoteVaultBump),
         {
           accounts: {
             authority,

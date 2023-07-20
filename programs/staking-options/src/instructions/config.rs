@@ -102,11 +102,12 @@ pub struct ConfigV3<'info> {
         token::authority = base_vault)]
     pub base_vault: Box<Account<'info, TokenAccount>>,
 
+    // TODO: Use a new vault seed
     /// Where the quote tokens are going to be held.
     #[account(
         init,
         payer = authority,
-        seeds = [SO_VAULT_SEED, so_name.as_bytes(), &quote_mint.key().to_bytes()],
+        seeds = [SO_REVERSE_VAULT_SEED, so_name.as_bytes(), &base_mint.key().to_bytes()],
         bump,
         token::mint = quote_mint,
         token::authority = quote_vault)]

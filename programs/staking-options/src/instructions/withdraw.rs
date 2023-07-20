@@ -115,9 +115,9 @@ pub fn withdraw_all(ctx: Context<WithdrawAll>, quote_vault_bump: u8) -> Result<(
         authority: ctx.accounts.quote_vault.to_account_info(),
     };
     let quote_seeds: &[&[&[u8]]] = &[&[
-        SO_VAULT_SEED,
+        SO_REVERSE_VAULT_SEED,
         &ctx.accounts.state.so_name.as_bytes(),
-        &ctx.accounts.state.quote_mint.key().to_bytes(),
+        &ctx.accounts.state.base_mint.key().to_bytes(),
         &[quote_vault_bump],
     ]];
 
@@ -192,7 +192,7 @@ pub struct WithdrawAll<'info> {
 
     /// The quote token location
     #[account(mut,
-        seeds = [SO_VAULT_SEED, state.so_name.as_bytes(), &state.quote_mint.key().to_bytes()],
+        seeds = [SO_REVERSE_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
         bump = quote_vault_bump,
     )]
     pub quote_vault: Box<Account<'info, TokenAccount>>,

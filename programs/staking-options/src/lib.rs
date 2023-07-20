@@ -107,8 +107,19 @@ pub mod staking_options {
         ctx: Context<ExerciseReversible>,
         amount: u64,
         strike: u64,
+        quote_vault_bump: u8,
     ) -> Result<()> {
-        exercise::exercise_reversible(ctx, amount, strike)
+        exercise::exercise_reversible(ctx, amount, strike, quote_vault_bump)
+    }
+
+    #[access_control(ctx.accounts.validate_accounts(amount, strike))]
+    pub fn reverse_exercise(
+        ctx: Context<ReverseExercise>,
+        amount: u64,
+        strike: u64,
+        quote_vault_bump: u8,
+    ) -> Result<()> {
+        exercise::reverse_exercise(ctx, amount, strike, quote_vault_bump)
     }
 
     #[access_control(ctx.accounts.validate_accounts(strike))]
