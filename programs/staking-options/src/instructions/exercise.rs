@@ -170,7 +170,11 @@ impl<'info> Exercise<'info> {
     }
 }
 
-pub fn exercise_reversible(ctx: Context<ExerciseReversible>, amount_lots: u64, strike: u64) -> Result<()> {
+pub fn exercise_reversible(
+    ctx: Context<ExerciseReversible>,
+    amount_lots: u64,
+    strike: u64,
+) -> Result<()> {
     // Verify the mint is correct.
     check_mint!(ctx, strike, bump);
 

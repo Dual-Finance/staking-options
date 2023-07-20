@@ -103,7 +103,11 @@ pub mod staking_options {
     }
 
     #[access_control(ctx.accounts.validate_accounts(amount, strike))]
-    pub fn exercise_reversible(ctx: Context<ExerciseReversible>, amount: u64, strike: u64) -> Result<()> {
+    pub fn exercise_reversible(
+        ctx: Context<ExerciseReversible>,
+        amount: u64,
+        strike: u64,
+    ) -> Result<()> {
         exercise::exercise_reversible(ctx, amount, strike)
     }
 
