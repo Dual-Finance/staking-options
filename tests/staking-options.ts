@@ -675,9 +675,36 @@ describe('staking-options', () => {
       exerciseTx.add(reversibleExerciseInstr);
       await provider.sendAndConfirm(exerciseTx);
 
+      const reverseExerciseInstr = program.instruction.reverseExercise(
+        new BN(OPTIONS_AMOUNT / LOT_SIZE / 2),
+        new BN(STRIKE),
+        new BN(quoteVaultBump),
+        {
+          accounts: {
+            authority,
+            state,
+            userSoAccount,
+            optionMint,
+            userReverseSoAccount,
+            reverseOptionMint,
+            userQuoteAccount,
+            quoteVault,
+            feeQuoteAccount: feeAccount,
+            baseVault,
+            userBaseAccount,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          },
+        },
+      );
+
+      const reverseTx = new Transaction();
+      reverseTx.add(reverseExerciseInstr);
+      await provider.sendAndConfirm(reverseTx);
+
       console.log(`Sleeping til options expire: ${Date.now() / 1_000}`);
       await new Promise((r) => setTimeout(r, OPTION_EXPIRATION_DELAY_SEC * 1_000));
       console.log(`Done sleeping: ${Date.now() / 1_000}`);
+
 
       const withdrawAllInstr = program.instruction.withdrawAll(quoteVaultBump, {
         accounts: {
