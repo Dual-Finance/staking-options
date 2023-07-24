@@ -93,7 +93,7 @@ impl<'info> Withdraw<'info> {
     }
 }
 
-pub fn withdraw_all(ctx: Context<WithdrawAll>, quote_vault_bump: u8) -> Result<()> {
+pub fn withdraw_all(ctx: Context<WithdrawAll>) -> Result<()> {
     // Allow partial withdraw after the subscription period end.
     let now: u64 = Clock::get().unwrap().unix_timestamp as u64;
 
@@ -118,7 +118,7 @@ pub fn withdraw_all(ctx: Context<WithdrawAll>, quote_vault_bump: u8) -> Result<(
         SO_REVERSE_VAULT_SEED,
         &ctx.accounts.state.so_name.as_bytes(),
         &ctx.accounts.state.base_mint.key().to_bytes(),
-        &[quote_vault_bump],
+        &[ctx.accounts.state.quote_vault_bump],
     ]];
 
     if now > ctx.accounts.state.option_expiration {
@@ -163,7 +163,7 @@ pub fn withdraw_all(ctx: Context<WithdrawAll>, quote_vault_bump: u8) -> Result<(
 }
 
 #[derive(Accounts)]
-#[instruction(quote_vault_bump: u8)]
+#[instruction()]
 pub struct WithdrawAll<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -193,7 +193,7 @@ pub struct WithdrawAll<'info> {
     /// The quote token location
     #[account(mut,
         seeds = [SO_REVERSE_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
-        bump = quote_vault_bump,
+        bump = state.quote_vault_bump,
     )]
     pub quote_vault: Box<Account<'info, TokenAccount>>,
 

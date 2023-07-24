@@ -28,8 +28,8 @@ pub struct State {
     // Number of decimals for the base token as well as SO.
     pub base_decimals: u8,
 
-    // TODO: Change this to be the quote_vault_bump.
-    pub quote_decimals: u8,
+    // Bump for where the quote tokens are saved in a reversible staking option.
+    pub quote_vault_bump: u8,
 
     // Mint of the project token
     pub base_mint: Pubkey,

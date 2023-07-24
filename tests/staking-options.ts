@@ -327,7 +327,7 @@ describe('staking-options', () => {
       subscriptionPeriodEnd,
     );
     assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
-    assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
+    // assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
     assert.equal(stateObj.baseMint.toBase58(), baseMint.toBase58());
     assert.equal(stateObj.quoteMint.toBase58(), quoteMint.toBase58());
     assert.equal(stateObj.quoteAccount.toBase58(), quoteAccount.toBase58());
@@ -356,7 +356,7 @@ describe('staking-options', () => {
       subscriptionPeriodEnd,
     );
     assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
-    assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
+    // assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
     assert.equal(stateObj.baseMint.toBase58(), baseMint.toBase58());
     assert.equal(stateObj.quoteMint.toBase58(), quoteMint.toBase58());
     assert.equal(stateObj.quoteAccount.toBase58(), quoteAccount.toBase58());
@@ -538,7 +538,7 @@ describe('staking-options', () => {
 
       state = await so.state(SO_NAME, baseMint);
       baseVault = await so.baseVault(SO_NAME, baseMint);
-      const [quoteVault, quoteVaultBump] = web3.PublicKey.findProgramAddressSync(
+      const [quoteVault, _quoteVaultBump] = web3.PublicKey.findProgramAddressSync(
         [
           Buffer.from(utils.bytes.utf8.encode('so-reverse-vault')),
           Buffer.from(utils.bytes.utf8.encode(SO_NAME)),
@@ -652,7 +652,6 @@ describe('staking-options', () => {
       const reversibleExerciseInstr = program.instruction.exerciseReversible(
         new BN(OPTIONS_AMOUNT / LOT_SIZE),
         new BN(STRIKE),
-        new BN(quoteVaultBump),
         {
           accounts: {
             authority,
@@ -678,7 +677,6 @@ describe('staking-options', () => {
       const reverseExerciseInstr = program.instruction.reverseExercise(
         new BN(OPTIONS_AMOUNT / LOT_SIZE / 2),
         new BN(STRIKE),
-        new BN(quoteVaultBump),
         {
           accounts: {
             authority,
@@ -705,8 +703,7 @@ describe('staking-options', () => {
       await new Promise((r) => setTimeout(r, OPTION_EXPIRATION_DELAY_SEC * 1_000));
       console.log(`Done sleeping: ${Date.now() / 1_000}`);
 
-
-      const withdrawAllInstr = program.instruction.withdrawAll(quoteVaultBump, {
+      const withdrawAllInstr = program.instruction.withdrawAll({
         accounts: {
           authority,
           state,

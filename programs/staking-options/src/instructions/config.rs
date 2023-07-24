@@ -27,7 +27,6 @@ pub fn config_v3(
     ctx.accounts.state.option_expiration = option_expiration;
     ctx.accounts.state.subscription_period_end = subscription_period_end;
     ctx.accounts.state.base_decimals = ctx.accounts.base_mint.decimals;
-    ctx.accounts.state.quote_decimals = ctx.accounts.quote_mint.decimals;
     ctx.accounts.state.base_mint = ctx.accounts.base_mint.key();
     ctx.accounts.state.quote_mint = ctx.accounts.quote_mint.key();
     ctx.accounts.state.quote_account = ctx.accounts.quote_account.key();
@@ -36,6 +35,8 @@ pub fn config_v3(
 
     ctx.accounts.state.state_bump = *ctx.bumps.get("state").unwrap();
     ctx.accounts.state.vault_bump = *ctx.bumps.get("base_vault").unwrap();
+
+    ctx.accounts.state.quote_vault_bump = *ctx.bumps.get("quote_vault").unwrap();
 
     // Take tokens that will back the options.
     let cpi_ctx = CpiContext::new(
@@ -154,7 +155,10 @@ pub fn config_v2(
     ctx.accounts.state.option_expiration = option_expiration;
     ctx.accounts.state.subscription_period_end = subscription_period_end;
     ctx.accounts.state.base_decimals = ctx.accounts.base_mint.decimals;
-    ctx.accounts.state.quote_decimals = ctx.accounts.quote_mint.decimals;
+
+    // No longer used. Repurposed the bytes for reversible.
+    // ctx.accounts.state.quote_decimals = ctx.accounts.quote_mint.decimals;
+
     ctx.accounts.state.base_mint = ctx.accounts.base_mint.key();
     ctx.accounts.state.quote_mint = ctx.accounts.quote_mint.key();
     ctx.accounts.state.quote_account = ctx.accounts.quote_account.key();
@@ -303,6 +307,7 @@ impl<'info> ConfigV2<'info> {
     }
 }
 
+// Deprecated
 pub fn config(
     ctx: Context<Config>,
     option_expiration: u64,
@@ -322,7 +327,10 @@ pub fn config(
     ctx.accounts.state.option_expiration = option_expiration;
     ctx.accounts.state.subscription_period_end = subscription_period_end;
     ctx.accounts.state.base_decimals = ctx.accounts.base_mint.decimals;
-    ctx.accounts.state.quote_decimals = ctx.accounts.quote_mint.decimals;
+
+    // No longer used. Repurposed the bytes for reversible.
+    // ctx.accounts.state.quote_decimals = ctx.accounts.quote_mint.decimals;
+
     ctx.accounts.state.base_mint = ctx.accounts.base_mint.key();
     ctx.accounts.state.quote_mint = ctx.accounts.quote_mint.key();
     ctx.accounts.state.quote_account = ctx.accounts.quote_account.key();

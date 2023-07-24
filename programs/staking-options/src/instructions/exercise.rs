@@ -174,7 +174,6 @@ pub fn exercise_reversible(
     ctx: Context<ExerciseReversible>,
     amount_lots: u64,
     strike: u64,
-    _quote_vault_bump: u8,
 ) -> Result<()> {
     // Verify the mint is correct.
     check_mint!(ctx, strike, bump);
@@ -292,7 +291,7 @@ pub fn exercise_reversible(
 }
 
 #[derive(Accounts)]
-#[instruction(amount: u64, strike: u64, quote_vault_bump: u8)]
+#[instruction(amount: u64, strike: u64)]
 pub struct ExerciseReversible<'info> {
     pub authority: Signer<'info>,
 
@@ -327,7 +326,7 @@ pub struct ExerciseReversible<'info> {
     /// or used for reverse option.
     #[account(mut,
         seeds = [SO_REVERSE_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
-        bump = quote_vault_bump
+        bump = state.quote_vault_bump
     )]
     pub quote_vault: Box<Account<'info, TokenAccount>>,
 
@@ -368,7 +367,6 @@ pub fn reverse_exercise(
     ctx: Context<ReverseExercise>,
     amount_lots: u64,
     strike: u64,
-    reverse_vault_bump: u8,
 ) -> Result<()> {
     check_mint!(ctx, strike, bump);
     check_reverse_mint!(ctx, strike, reverse_bump);
@@ -434,7 +432,7 @@ pub fn reverse_exercise(
                     SO_REVERSE_VAULT_SEED,
                     &ctx.accounts.state.so_name.as_bytes(),
                     &ctx.accounts.state.base_mint.key().to_bytes(),
-                    &[reverse_vault_bump],
+                    &[ctx.accounts.state.quote_vault_bump],
                 ]],
             ),
             payment.checked_sub(fee).unwrap(),
@@ -451,7 +449,7 @@ pub fn reverse_exercise(
                     SO_REVERSE_VAULT_SEED,
                     &ctx.accounts.state.so_name.as_bytes(),
                     &ctx.accounts.state.base_mint.key().to_bytes(),
-                    &[reverse_vault_bump],
+                    &[ctx.accounts.state.quote_vault_bump],
                 ]],
             ),
             fee,
@@ -489,7 +487,7 @@ pub fn reverse_exercise(
 }
 
 #[derive(Accounts)]
-#[instruction(amount: u64, strike: u64, quote_vault_bump: u8)]
+#[instruction(amount: u64, strike: u64)]
 pub struct ReverseExercise<'info> {
     pub authority: Signer<'info>,
 
@@ -524,7 +522,7 @@ pub struct ReverseExercise<'info> {
     /// or used for reverse option.
     #[account(mut,
         seeds = [SO_REVERSE_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
-        bump = state.vault_bump,
+        bump = state.quote_vault_bump,
     )]
     pub quote_vault: Box<Account<'info, TokenAccount>>,
 

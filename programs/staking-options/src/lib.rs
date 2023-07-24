@@ -107,19 +107,13 @@ pub mod staking_options {
         ctx: Context<ExerciseReversible>,
         amount: u64,
         strike: u64,
-        quote_vault_bump: u8,
     ) -> Result<()> {
-        exercise::exercise_reversible(ctx, amount, strike, quote_vault_bump)
+        exercise::exercise_reversible(ctx, amount, strike)
     }
 
     #[access_control(ctx.accounts.validate_accounts(amount, strike))]
-    pub fn reverse_exercise(
-        ctx: Context<ReverseExercise>,
-        amount: u64,
-        strike: u64,
-        quote_vault_bump: u8,
-    ) -> Result<()> {
-        exercise::reverse_exercise(ctx, amount, strike, quote_vault_bump)
+    pub fn reverse_exercise(ctx: Context<ReverseExercise>, amount: u64, strike: u64) -> Result<()> {
+        exercise::reverse_exercise(ctx, amount, strike)
     }
 
     #[access_control(ctx.accounts.validate_accounts(strike))]
@@ -152,7 +146,7 @@ pub mod staking_options {
     }
 
     #[access_control(ctx.accounts.validate_accounts())]
-    pub fn withdraw_all(ctx: Context<WithdrawAll>, quote_vault_bump: u8) -> Result<()> {
-        withdraw::withdraw_all(ctx, quote_vault_bump)
+    pub fn withdraw_all(ctx: Context<WithdrawAll>) -> Result<()> {
+        withdraw::withdraw_all(ctx)
     }
 }
