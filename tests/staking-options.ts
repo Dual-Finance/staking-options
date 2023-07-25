@@ -699,6 +699,8 @@ describe('staking-options', () => {
       await new Promise((r) => setTimeout(r, OPTION_EXPIRATION_DELAY_SEC * 1_000));
       console.log(`Done sleeping: ${Date.now() / 1_000}`);
 
+      const feeAccount = await SO.getFeeAccount(quoteMint);
+
       const withdrawAllInstr = program.instruction.withdrawAll({
         accounts: {
           authority,
@@ -707,6 +709,7 @@ describe('staking-options', () => {
           baseAccount,
           quoteVault,
           quoteAccount,
+          feeQuoteAccount: feeAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: web3.SystemProgram.programId,
         },

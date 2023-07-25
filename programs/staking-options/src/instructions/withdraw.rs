@@ -114,6 +114,11 @@ pub fn withdraw_all(ctx: Context<WithdrawAll>) -> Result<()> {
         to: ctx.accounts.quote_account.to_account_info(),
         authority: ctx.accounts.quote_vault.to_account_info(),
     };
+    let quote_fee_transfer = anchor_spl::token::Transfer {
+        from: ctx.accounts.quote_vault.to_account_info(),
+        to: ctx.accounts.fee_quote_account.to_account_info(),
+        authority: ctx.accounts.quote_vault.to_account_info(),
+    };
     let quote_seeds: &[&[&[u8]]] = &[&[
         SO_REVERSE_VAULT_SEED,
         &ctx.accounts.state.so_name.as_bytes(),
@@ -131,6 +136,9 @@ pub fn withdraw_all(ctx: Context<WithdrawAll>) -> Result<()> {
             ),
             ctx.accounts.base_vault.amount,
         )?;
+
+        let total_quote_tokens = ctx.accounts.quote_vault.amount;
+        let fee: u64 = total_quote_tokens.checked_mul(35).unwrap().checked_div(1_000).unwrap();
         // Send quote tokens from the vault.
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
@@ -138,9 +146,19 @@ pub fn withdraw_all(ctx: Context<WithdrawAll>) -> Result<()> {
                 quote_transfer,
                 quote_seeds,
             ),
-            ctx.accounts.quote_vault.amount,
+            total_quote_tokens.checked_sub(fee).unwrap(),
         )?;
-        // Conditionally close the SOState if it is the final withdraw.
+
+        anchor_spl::token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                quote_fee_transfer,
+                quote_seeds,
+            ),
+            fee,
+        )?;
+
+        // Close the SOState if it is the final withdraw.
         ctx.accounts
             .state
             .close(ctx.accounts.authority.to_account_info())?;
@@ -197,9 +215,12 @@ pub struct WithdrawAll<'info> {
     )]
     pub quote_vault: Box<Account<'info, TokenAccount>>,
 
-    /// Where the tokens are getting returned to
     #[account(mut)]
     pub quote_account: Box<Account<'info, TokenAccount>>,
+
+    /// DUAL DAO owned fee account
+    #[account(mut)]
+    pub fee_quote_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
