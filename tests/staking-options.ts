@@ -717,6 +717,13 @@ describe('staking-options', () => {
       const withdrawTx = new Transaction();
       withdrawTx.add(withdrawAllInstr);
       await provider.sendAndConfirm(withdrawTx);
+
+      // Get back all the base tokens except the half of the tokens that were
+      // not reverse exercised.
+      assert.equal(
+        Number((await getAccount(provider.connection, baseAccount)).amount),
+        numTokens - OPTIONS_AMOUNT / 2,
+      );
     } catch (err) {
       console.log(err);
       assert(false);
