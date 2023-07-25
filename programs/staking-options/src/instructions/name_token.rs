@@ -9,8 +9,9 @@ pub fn name_token(ctx: Context<NameToken>, strike: u64) -> Result<()> {
     // Token name is
     // DUAL-[soName]-[strike converted to lots]
     let strike_quote_atoms_per_lot_float: f64 = strike as f64;
-    let strike_quote_tokens_per_lot_float: f64 = strike_quote_atoms_per_lot_float
-        / (u64::pow(10, ctx.accounts.state.quote_decimals as u32) as f64);
+    // Assumes 6 decimals for quote token
+    let strike_quote_tokens_per_lot_float: f64 =
+        strike_quote_atoms_per_lot_float / (1_000_000 as f64);
     let strike_quote_tokens_per_token_float: f64 = strike_quote_tokens_per_lot_float
         / ctx.accounts.state.lot_size as f64
         * (u64::pow(10, ctx.accounts.state.base_decimals as u32) as f64);
@@ -75,7 +76,7 @@ pub struct NameToken<'info> {
     /// State holding all the data for the stake that the staker wants to do.
     pub state: Box<Account<'info, State>>,
 
-    /// Mint of base tokens.
+    /// Mint of option tokens.
     pub option_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: This is not dangerous. Checked by metaplex

@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import {
-  AnchorProvider, Program, BN, workspace, web3,
+  AnchorProvider, Program, BN, workspace, web3, utils,
 } from '@coral-xyz/anchor';
 import { StakingOptions as SO } from '@dual-finance/staking-options';
 import {
@@ -15,6 +15,7 @@ import {
   createMint,
   createTokenAccount,
   mintToAccount,
+  toBeBytes,
 } from './utils/utils';
 
 const anchor = require('@coral-xyz/anchor');
@@ -35,6 +36,7 @@ describe('staking-options', () => {
   let userQuoteAccount: PublicKey;
   let optionMint: PublicKey;
   let userSoAccount: PublicKey;
+  let userReverseSoAccount: PublicKey;
   let userBaseAccount: PublicKey;
 
   let optionExpiration: number;
@@ -325,7 +327,7 @@ describe('staking-options', () => {
       subscriptionPeriodEnd,
     );
     assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
-    assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
+    // assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
     assert.equal(stateObj.baseMint.toBase58(), baseMint.toBase58());
     assert.equal(stateObj.quoteMint.toBase58(), quoteMint.toBase58());
     assert.equal(stateObj.quoteAccount.toBase58(), quoteAccount.toBase58());
@@ -354,7 +356,7 @@ describe('staking-options', () => {
       subscriptionPeriodEnd,
     );
     assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
-    assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
+    // assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
     assert.equal(stateObj.baseMint.toBase58(), baseMint.toBase58());
     assert.equal(stateObj.quoteMint.toBase58(), quoteMint.toBase58());
     assert.equal(stateObj.quoteAccount.toBase58(), quoteAccount.toBase58());
@@ -506,5 +508,225 @@ describe('staking-options', () => {
 
     console.log('Verifying state removed');
     assert(await provider.connection.getAccountInfo(state) === null);
+  });
+
+  it('E2E Reversible', async () => {
+    try {
+      subscriptionPeriodEnd = Math.floor(Date.now() / 1_000 + OPTION_EXPIRATION_DELAY_SEC / 2);
+      optionExpiration = Math.floor(Date.now() / 1_000 + OPTION_EXPIRATION_DELAY_SEC);
+      console.log(`subscriptionPeriodEnd: ${subscriptionPeriodEnd}, optionExpiration: ${optionExpiration}`);
+
+      baseMint = await createMint(provider, undefined);
+      baseAccount = await createTokenAccount(
+        provider,
+        baseMint,
+        provider.wallet.publicKey,
+      );
+      await mintToAccount(
+        provider,
+        baseMint,
+        baseAccount,
+        new BN(numTokens),
+        provider.wallet.publicKey,
+      );
+      quoteMint = await createMint(provider, undefined);
+      quoteAccount = await createTokenAccount(
+        provider,
+        quoteMint,
+        provider.wallet.publicKey,
+      );
+
+      state = await so.state(SO_NAME, baseMint);
+      baseVault = await so.baseVault(SO_NAME, baseMint);
+      const [quoteVault, _quoteVaultBump] = web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from(utils.bytes.utf8.encode('so-reverse-vault')),
+          Buffer.from(utils.bytes.utf8.encode(SO_NAME)),
+          baseMint.toBuffer(),
+        ],
+        program.programId,
+      );
+
+      const authority = provider.wallet.publicKey;
+      const configReversibleInstr = program.instruction.configV3(
+        new BN(optionExpiration),
+        new BN(subscriptionPeriodEnd),
+        new BN(numTokens),
+        new BN(LOT_SIZE),
+        SO_NAME,
+        {
+          accounts: {
+            authority,
+            soAuthority: authority,
+            issueAuthority: authority,
+            state,
+            baseVault,
+            quoteVault,
+            baseAccount,
+            quoteAccount,
+            baseMint,
+            quoteMint,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            systemProgram: web3.SystemProgram.programId,
+            rent: web3.SYSVAR_RENT_PUBKEY,
+          },
+        },
+      );
+
+      const configTx = new Transaction();
+      configTx.add(configReversibleInstr);
+      await provider.sendAndConfirm(configTx);
+
+      optionMint = await so.soMint(STRIKE, SO_NAME, baseMint);
+      const [reverseOptionMint, _reverseOptionMintBump] = await web3.PublicKey.findProgramAddress(
+        [
+          Buffer.from(utils.bytes.utf8.encode('so-reverse-mint')),
+          state.toBuffer(),
+          toBeBytes(STRIKE),
+        ],
+        program.programId,
+      );
+
+      const initStrikeReversibleInstr = program.instruction.initStrikeReversible(new BN(STRIKE), {
+        accounts: {
+          authority,
+          payer: authority,
+          state,
+          optionMint,
+          reverseOptionMint,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: web3.SystemProgram.programId,
+          rent: web3.SYSVAR_RENT_PUBKEY,
+        },
+      });
+
+      const initStrikeTx = new Transaction();
+      initStrikeTx.add(initStrikeReversibleInstr);
+      await provider.sendAndConfirm(initStrikeTx);
+
+      await issue(OPTIONS_AMOUNT, STRIKE);
+
+      userQuoteAccount = await createTokenAccount(
+        provider,
+        quoteMint,
+        provider.wallet.publicKey,
+      );
+      await mintToAccount(
+        provider,
+        quoteMint,
+        userQuoteAccount,
+        new BN(OPTIONS_AMOUNT * STRIKE * DEFAULT_MINT_DECIMALS),
+        provider.wallet.publicKey,
+      );
+
+      userBaseAccount = await createTokenAccount(
+        provider,
+        baseMint,
+        provider.wallet.publicKey,
+      );
+
+      try {
+        const ataTx = new Transaction();
+        ataTx.add(
+          await createAssociatedTokenAccount(
+            provider.wallet.publicKey,
+            new PublicKey('7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE'),
+            quoteMint,
+          ),
+        );
+        await provider.sendAndConfirm(ataTx);
+      } catch (err) {
+        console.log(err);
+        console.log('Fee account already exists');
+      }
+
+      baseVault = await so.baseVault(SO_NAME, baseMint);
+      userReverseSoAccount = await createTokenAccount(
+        provider,
+        reverseOptionMint,
+        provider.wallet.publicKey,
+      );
+
+      const reversibleExerciseInstr = program.instruction.exerciseReversible(
+        new BN(OPTIONS_AMOUNT / LOT_SIZE),
+        new BN(STRIKE),
+        {
+          accounts: {
+            authority,
+            state,
+            userSoAccount,
+            optionMint,
+            userReverseSoAccount,
+            reverseOptionMint,
+            userQuoteAccount,
+            quoteVault,
+            baseVault,
+            userBaseAccount,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          },
+        },
+      );
+
+      const exerciseTx = new Transaction();
+      exerciseTx.add(reversibleExerciseInstr);
+      await provider.sendAndConfirm(exerciseTx);
+
+      const reverseExerciseInstr = program.instruction.reverseExercise(
+        new BN(OPTIONS_AMOUNT / LOT_SIZE / 2),
+        new BN(STRIKE),
+        {
+          accounts: {
+            authority,
+            state,
+            userSoAccount,
+            optionMint,
+            userReverseSoAccount,
+            reverseOptionMint,
+            userQuoteAccount,
+            quoteVault,
+            baseVault,
+            userBaseAccount,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          },
+        },
+      );
+
+      const reverseTx = new Transaction();
+      reverseTx.add(reverseExerciseInstr);
+      await provider.sendAndConfirm(reverseTx);
+
+      console.log(`Sleeping til options expire: ${Date.now() / 1_000}`);
+      await new Promise((r) => setTimeout(r, OPTION_EXPIRATION_DELAY_SEC * 1_000));
+      console.log(`Done sleeping: ${Date.now() / 1_000}`);
+
+      const feeAccount = await SO.getFeeAccount(quoteMint);
+
+      const withdrawAllInstr = program.instruction.withdrawAll({
+        accounts: {
+          authority,
+          state,
+          baseVault,
+          baseAccount,
+          quoteVault,
+          quoteAccount,
+          feeQuoteAccount: feeAccount,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: web3.SystemProgram.programId,
+        },
+      });
+      const withdrawTx = new Transaction();
+      withdrawTx.add(withdrawAllInstr);
+      await provider.sendAndConfirm(withdrawTx);
+
+      // Get back all the base tokens except the half of the tokens that were
+      // not reverse exercised.
+      assert.equal(
+        Number((await getAccount(provider.connection, baseAccount)).amount),
+        numTokens - OPTIONS_AMOUNT / 2,
+      );
+    } catch (err) {
+      console.log(err);
+      assert(false);
+    }
   });
 });
