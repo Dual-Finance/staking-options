@@ -138,7 +138,11 @@ pub fn withdraw_all(ctx: Context<WithdrawAll>) -> Result<()> {
         )?;
 
         let total_quote_tokens = ctx.accounts.quote_vault.amount;
-        let fee: u64 = total_quote_tokens.checked_mul(35).unwrap().checked_div(1_000).unwrap();
+        let fee: u64 = total_quote_tokens
+            .checked_mul(35)
+            .unwrap()
+            .checked_div(1_000)
+            .unwrap();
         // Send quote tokens from the vault.
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
