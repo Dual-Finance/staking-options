@@ -625,8 +625,6 @@ describe('staking-options', () => {
         provider.wallet.publicKey,
       );
 
-      const feeAccount = await SO.getFeeAccount(quoteMint);
-
       try {
         const ataTx = new Transaction();
         ataTx.add(
@@ -662,7 +660,6 @@ describe('staking-options', () => {
             reverseOptionMint,
             userQuoteAccount,
             quoteVault,
-            feeQuoteAccount: feeAccount,
             baseVault,
             userBaseAccount,
             tokenProgram: TOKEN_PROGRAM_ID,
@@ -687,7 +684,6 @@ describe('staking-options', () => {
             reverseOptionMint,
             userQuoteAccount,
             quoteVault,
-            feeQuoteAccount: feeAccount,
             baseVault,
             userBaseAccount,
             tokenProgram: TOKEN_PROGRAM_ID,

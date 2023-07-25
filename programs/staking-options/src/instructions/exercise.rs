@@ -222,49 +222,17 @@ pub fn exercise_reversible(
     // Take the Quote Token payment
     let payment: u64 = amount_lots.checked_mul(strike).unwrap();
 
-    // Charge fee when it is not Dual DAO or Dual Labs RM is exercising.
-    if ctx.accounts.user_quote_account.owner.key().to_string()
-        != "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
-        && ctx.accounts.user_quote_account.owner.key().to_string()
-            != "CkcJx7Uwgxck5zm3DqUp2N1ikkkoPn2wA8zf7oS4tFSZ"
-    {
-        // 3.5% fee.
-        let fee: u64 = payment.checked_mul(35).unwrap().checked_div(1_000).unwrap();
-        anchor_spl::token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: ctx.accounts.user_quote_account.to_account_info(),
-                    to: ctx.accounts.quote_vault.to_account_info(),
-                    authority: ctx.accounts.authority.to_account_info().clone(),
-                },
-            ),
-            payment.checked_sub(fee).unwrap(),
-        )?;
-        anchor_spl::token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: ctx.accounts.user_quote_account.to_account_info(),
-                    to: ctx.accounts.fee_quote_account.to_account_info(),
-                    authority: ctx.accounts.authority.to_account_info().clone(),
-                },
-            ),
-            fee,
-        )?;
-    } else {
-        anchor_spl::token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: ctx.accounts.user_quote_account.to_account_info(),
-                    to: ctx.accounts.quote_vault.to_account_info(),
-                    authority: ctx.accounts.authority.to_account_info().clone(),
-                },
-            ),
-            payment,
-        )?;
-    }
+    anchor_spl::token::transfer(
+        CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            anchor_spl::token::Transfer {
+                from: ctx.accounts.user_quote_account.to_account_info(),
+                to: ctx.accounts.quote_vault.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info().clone(),
+            },
+        ),
+        payment,
+    )?;
 
     // Transfer the base tokens
     anchor_spl::token::transfer(
@@ -330,10 +298,6 @@ pub struct ExerciseReversible<'info> {
     )]
     pub quote_vault: Box<Account<'info, TokenAccount>>,
 
-    /// Where the fee is going
-    #[account(mut)]
-    pub fee_quote_account: Box<Account<'info, TokenAccount>>,
-
     /// The base token location for this SO.
     #[account(mut,
         seeds = [SO_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
@@ -350,12 +314,6 @@ pub struct ExerciseReversible<'info> {
 
 impl<'info> ExerciseReversible<'info> {
     pub fn validate_accounts(&self, _amount: u64, _strike: u64) -> Result<()> {
-        // Verify that it is owned by DUAL.
-        require_eq!(
-            self.fee_quote_account.owner.key().to_string(),
-            "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
-        );
-
         // Verify expiration
         check_not_expired!(self.state.option_expiration);
 
@@ -412,61 +370,23 @@ pub fn reverse_exercise(
     // Take the Quote Token payment
     let payment: u64 = amount_lots.checked_mul(strike).unwrap();
 
-    // Charge fee when it is not Dual DAO or Dual Labs RM is exercising.
-    if ctx.accounts.user_quote_account.owner.key().to_string()
-        != "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
-        && ctx.accounts.user_quote_account.owner.key().to_string()
-            != "CkcJx7Uwgxck5zm3DqUp2N1ikkkoPn2wA8zf7oS4tFSZ"
-    {
-        // 3.5% fee.
-        let fee: u64 = payment.checked_mul(35).unwrap().checked_div(1_000).unwrap();
-        anchor_spl::token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: ctx.accounts.quote_vault.to_account_info(),
-                    to: ctx.accounts.user_quote_account.to_account_info(),
-                    authority: ctx.accounts.quote_vault.to_account_info().clone(),
-                },
-                &[&[
-                    SO_REVERSE_VAULT_SEED,
-                    &ctx.accounts.state.so_name.as_bytes(),
-                    &ctx.accounts.state.base_mint.key().to_bytes(),
-                    &[ctx.accounts.state.quote_vault_bump],
-                ]],
-            ),
-            payment.checked_sub(fee).unwrap(),
-        )?;
-        anchor_spl::token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: ctx.accounts.quote_vault.to_account_info(),
-                    to: ctx.accounts.fee_quote_account.to_account_info(),
-                    authority: ctx.accounts.quote_vault.to_account_info().clone(),
-                },
-                &[&[
-                    SO_REVERSE_VAULT_SEED,
-                    &ctx.accounts.state.so_name.as_bytes(),
-                    &ctx.accounts.state.base_mint.key().to_bytes(),
-                    &[ctx.accounts.state.quote_vault_bump],
-                ]],
-            ),
-            fee,
-        )?;
-    } else {
-        anchor_spl::token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: ctx.accounts.quote_vault.to_account_info(),
-                    to: ctx.accounts.user_quote_account.to_account_info(),
-                    authority: ctx.accounts.quote_vault.to_account_info().clone(),
-                },
-            ),
-            payment,
-        )?;
-    }
+    anchor_spl::token::transfer(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            anchor_spl::token::Transfer {
+                from: ctx.accounts.quote_vault.to_account_info(),
+                to: ctx.accounts.user_quote_account.to_account_info(),
+                authority: ctx.accounts.quote_vault.to_account_info().clone(),
+            },
+            &[&[
+                SO_REVERSE_VAULT_SEED,
+                &ctx.accounts.state.so_name.as_bytes(),
+                &ctx.accounts.state.base_mint.key().to_bytes(),
+                &[ctx.accounts.state.quote_vault_bump],
+            ]],
+        ),
+        payment,
+    )?;
 
     // Transfer the base tokens
     anchor_spl::token::transfer(
@@ -526,10 +446,6 @@ pub struct ReverseExercise<'info> {
     )]
     pub quote_vault: Box<Account<'info, TokenAccount>>,
 
-    /// Where the fee is going
-    #[account(mut)]
-    pub fee_quote_account: Box<Account<'info, TokenAccount>>,
-
     /// The base token location for this SO.
     #[account(mut,
         seeds = [SO_VAULT_SEED, state.so_name.as_bytes(), &state.base_mint.key().to_bytes()],
@@ -546,12 +462,6 @@ pub struct ReverseExercise<'info> {
 
 impl<'info> ReverseExercise<'info> {
     pub fn validate_accounts(&self, _amount: u64, _strike: u64) -> Result<()> {
-        // Verify that it is owned by DUAL.
-        require_eq!(
-            self.fee_quote_account.owner.key().to_string(),
-            "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
-        );
-
         // Verify expiration
         check_not_expired!(self.state.option_expiration);
 
