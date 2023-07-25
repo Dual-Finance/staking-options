@@ -238,6 +238,12 @@ impl<'info> WithdrawAll<'info> {
         // Verify that subscription period has ended.
         check_expired!(self.state.subscription_period_end);
 
+        // Verify that the fee account is owned by DUAL.
+        require_eq!(
+            self.fee_quote_account.owner.key().to_string(),
+            "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
+        );
+
         Ok(())
     }
 }
