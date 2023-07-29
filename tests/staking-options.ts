@@ -497,4 +497,6 @@ describe('staking-options', () => {
       assert(false);
     }
   });
+
+  // TODO: Test fee exempt and reduced fee pairs
 });

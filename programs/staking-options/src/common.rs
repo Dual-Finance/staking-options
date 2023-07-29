@@ -55,3 +55,44 @@ pub struct State {
     // the config, initStrike, withdraw, but a program is doing the issuing.
     pub issue_authority: Pubkey,
 }
+
+pub const DUAL_DAO_ADDRESS: &str = "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE";
+const DUAL_RISK_MANAGER: &str = "CkcJx7Uwgxck5zm3DqUp2N1ikkkoPn2wA8zf7oS4tFSZ";
+
+const USDC: &str = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const USDT: &str = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
+const DAIPO: &str = "EjmyN6qEC1Tf1JxiG1ae7UTJhUxSwk1TCWNWqxWV4J6o";
+const USDH: &str = "USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX";
+
+pub fn is_fee_exempt(user_quote_account_owner: Pubkey) -> bool {
+    // Do not charge fee when the DUAL DAO is exercising since that is the recipient of the fee.
+    if user_quote_account_owner.to_string() == DUAL_DAO_ADDRESS {
+        return true;
+    }
+    // Do not charge fee when the DUAL DAO is exercising since that is the recipient of the fee.
+    if user_quote_account_owner.to_string() == DUAL_RISK_MANAGER {
+        return true;
+    }
+
+    return false;
+}
+
+pub fn is_reduced_fee(base_mint: Pubkey, quote_mint: Pubkey) -> bool {
+    let is_base_stable = [
+        USDC.to_string(),
+        USDT.to_string(),
+        DAIPO.to_string(),
+        USDH.to_string(),
+    ]
+    .contains(&base_mint.to_string());
+    let is_quote_stable = [
+        USDC.to_string(),
+        USDT.to_string(),
+        DAIPO.to_string(),
+        USDH.to_string(),
+    ]
+    .contains(&quote_mint.to_string());
+
+    // Do not charge fee for swaps of just stable coins.
+    return is_base_stable && is_quote_stable;
+}
