@@ -63,6 +63,7 @@ const USDC: &str = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const USDT: &str = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const DAIPO: &str = "EjmyN6qEC1Tf1JxiG1ae7UTJhUxSwk1TCWNWqxWV4J6o";
 const USDH: &str = "USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX";
+const CHAI: &str = "3jsFX1tx2Z8ewmamiwSU851GzyzM2DJMq7KWW5DM8Py3";
 
 pub fn is_fee_exempt(user_quote_account_owner: Pubkey) -> bool {
     // Do not charge fee when the DUAL DAO is exercising since that is the recipient of the fee.
@@ -83,6 +84,7 @@ pub fn is_reduced_fee(base_mint: Pubkey, quote_mint: Pubkey) -> bool {
         USDT.to_string(),
         DAIPO.to_string(),
         USDH.to_string(),
+        CHAI.to_string(),
     ]
     .contains(&base_mint.to_string());
     let is_quote_stable = [
@@ -90,6 +92,7 @@ pub fn is_reduced_fee(base_mint: Pubkey, quote_mint: Pubkey) -> bool {
         USDT.to_string(),
         DAIPO.to_string(),
         USDH.to_string(),
+        CHAI.to_string(),
     ]
     .contains(&quote_mint.to_string());
 
