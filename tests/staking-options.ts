@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import {
-  AnchorProvider, Program, BN, workspace
+  AnchorProvider, Program, BN, workspace,
 } from '@coral-xyz/anchor';
 import { StakingOptions as SO } from '@dual-finance/staking-options';
 import {
@@ -460,7 +460,7 @@ describe('staking-options', () => {
         userSoAccount,
         userReverseSoAccount,
         userQuoteAccount,
-        userBaseAccount
+        userBaseAccount,
       );
 
       const exerciseTx = new Transaction();
@@ -477,7 +477,7 @@ describe('staking-options', () => {
         userSoAccount,
         userReverseSoAccount,
         userQuoteAccount,
-        userBaseAccount
+        userBaseAccount,
       );
 
       const reverseTx = new Transaction();
