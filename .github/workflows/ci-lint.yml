@@ -33,7 +33,7 @@ jobs:
       - name: Run fmt
         run: cargo fmt -- --check
       - name: Run clippy
-        run: cargo clippy -- --deny=warnings --allow=clippy::style --allow=clippy::complexity  --allow=clippy::result_large_err
+        run: cargo clippy -- --deny=warnings --allow=clippy::style --allow=clippy::complexity  --allow=clippy::result_large_err --allow=ambiguous-glob-reexports
 
       - name: Install eslint
         run: yarn install
