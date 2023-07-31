@@ -138,11 +138,17 @@ pub fn withdraw_all(ctx: Context<WithdrawAll>) -> Result<()> {
         )?;
 
         let total_quote_tokens = ctx.accounts.quote_vault.amount;
-        let fee: u64 = total_quote_tokens
-            .checked_mul(35)
-            .unwrap()
-            .checked_div(1_000)
-            .unwrap();
+        let fee: u64 = if is_fee_exempt(ctx.accounts.quote_account.owner.key()) {
+            0
+        } else {
+            let fee_bps = get_fee_bps(ctx.accounts.state.base_mint, ctx.accounts.state.quote_mint);
+
+            total_quote_tokens
+                .checked_mul(fee_bps)
+                .unwrap()
+                .checked_div(10_000)
+                .unwrap()
+        };
         // Send quote tokens from the vault.
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
@@ -241,7 +247,7 @@ impl<'info> WithdrawAll<'info> {
         // Verify that the fee account is owned by DUAL.
         require_eq!(
             self.fee_quote_account.owner.key().to_string(),
-            "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
+            DUAL_DAO_ADDRESS
         );
 
         Ok(())
