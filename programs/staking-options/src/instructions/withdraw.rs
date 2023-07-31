@@ -141,12 +141,7 @@ pub fn withdraw_all(ctx: Context<WithdrawAll>) -> Result<()> {
         let fee: u64 = if is_fee_exempt(ctx.accounts.quote_account.owner.key()) {
             0
         } else {
-            let fee_bps =
-                if is_reduced_fee(ctx.accounts.state.base_mint, ctx.accounts.state.quote_mint) {
-                    5
-                } else {
-                    350
-                };
+            let fee_bps = get_fee_bps(ctx.accounts.state.base_mint, ctx.accounts.state.quote_mint);
 
             total_quote_tokens
                 .checked_mul(fee_bps)
