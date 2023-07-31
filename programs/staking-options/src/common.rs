@@ -124,7 +124,7 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
 
     // Charge reduced fees on pairs of majors.
     if (is_base_major && is_quote_stable) || (is_quote_major && is_base_stable) {
-        return 25
+        return 25;
     }
 
     return 350;
