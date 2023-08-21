@@ -57,7 +57,6 @@ pub struct State {
     pub issue_authority: Pubkey,
 }
 
-pub const DUAL_DAO_ADDRESS: &str = "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE";
 const DUAL_RISK_MANAGER: &str = "CkcJx7Uwgxck5zm3DqUp2N1ikkkoPn2wA8zf7oS4tFSZ";
 
 const USDC: &str = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
