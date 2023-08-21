@@ -21,5 +21,6 @@ module.exports = {
     'no-console': 0,
     'import/no-unresolved': 0,
     'no-promise-executor-return': 0,
+    'no-bitwise': 0,
   },
 };

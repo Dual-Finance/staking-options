@@ -1,6 +1,6 @@
 {
     "dependencies": {
-        "@dual-finance/staking-options": "^0.0.17",
+        "@dual-finance/staking-options": "^0.0.24",
         "@metaplex-foundation/js": "^0.17.12",
         "@coral-xyz/anchor": "^0.26.0",
         "@project-serum/associated-token": "^0.1.1",

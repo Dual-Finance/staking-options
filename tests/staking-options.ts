@@ -1,14 +1,14 @@
 import assert from 'assert';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import {
-  AnchorProvider, Program, BN, workspace, web3,
+  AnchorProvider, Program, BN, workspace,
 } from '@coral-xyz/anchor';
 import { StakingOptions as SO } from '@dual-finance/staking-options';
 import {
   createAssociatedTokenAccount,
 } from '@project-serum/associated-token';
 import { Metaplex } from '@metaplex-foundation/js';
-import { getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { getAccount } from '@solana/spl-token';
 import { StakingOptions } from '../target/types/staking_options';
 import {
   DEFAULT_MINT_DECIMALS,
@@ -35,6 +35,7 @@ describe('staking-options', () => {
   let userQuoteAccount: PublicKey;
   let optionMint: PublicKey;
   let userSoAccount: PublicKey;
+  let userReverseSoAccount: PublicKey;
   let userBaseAccount: PublicKey;
 
   let optionExpiration: number;
@@ -97,74 +98,12 @@ describe('staking-options', () => {
     await provider.sendAndConfirm(tx);
   }
 
-  async function configureV2() {
-    console.log('Configuring SO v2');
-
-    subscriptionPeriodEnd = Math.floor(Date.now() / 1_000 + OPTION_EXPIRATION_DELAY_SEC / 2);
-    optionExpiration = Math.floor(Date.now() / 1_000 + OPTION_EXPIRATION_DELAY_SEC);
-    console.log(`subscriptionPeriodEnd: ${subscriptionPeriodEnd}, optionExpiration: ${optionExpiration}`);
-
-    // Use a new BaseMint every run so that there is a new State.
-    baseMint = await createMint(provider, undefined);
-    baseAccount = await createTokenAccount(
-      provider,
-      baseMint,
-      provider.wallet.publicKey,
-    );
-    await mintToAccount(
-      provider,
-      baseMint,
-      baseAccount,
-      new BN(numTokens),
-      provider.wallet.publicKey,
-    );
-    if (!quoteMint) {
-      quoteMint = await createMint(provider, undefined);
-      quoteAccount = await createTokenAccount(
-        provider,
-        quoteMint,
-        provider.wallet.publicKey,
-      );
-    }
-
-    state = await so.state(SO_NAME, baseMint);
-    baseVault = await so.baseVault(SO_NAME, baseMint);
-
-    const instr = program.instruction.configV2(
-      new BN(optionExpiration),
-      new BN(subscriptionPeriodEnd),
-      new BN(numTokens),
-      new BN(LOT_SIZE),
-      SO_NAME,
-      {
-        accounts: {
-          authority: provider.wallet.publicKey,
-          soAuthority: provider.wallet.publicKey,
-          issueAuthority: provider.wallet.publicKey,
-          state,
-          baseVault,
-          baseAccount,
-          quoteAccount,
-          baseMint,
-          quoteMint,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: web3.SystemProgram.programId,
-          rent: web3.SYSVAR_RENT_PUBKEY,
-        },
-      },
-    );
-
-    const tx = new Transaction();
-    tx.add(instr);
-    await provider.sendAndConfirm(tx);
-  }
-
   async function initStrike(strike: number) {
     console.log('Init Strike');
 
     optionMint = await so.soMint(strike, SO_NAME, baseMint);
 
-    const instr = await so.createInitStrikeInstruction(
+    const instr = await so.createInitStrikeReversibleInstruction(
       new BN(strike),
       SO_NAME,
       provider.wallet.publicKey,
@@ -284,6 +223,7 @@ describe('staking-options', () => {
       SO_NAME,
       provider.wallet.publicKey,
       baseAccount,
+      quoteAccount,
     );
     const tx = new Transaction();
     tx.add(instr);
@@ -304,40 +244,6 @@ describe('staking-options', () => {
     await provider.sendAndConfirm(tx);
   }
 
-  it('Config v2 Success', async () => {
-    await configureV2();
-    console.log('Done configuring, doing verification');
-
-    // Verify the State.
-    const stateObj = await program.account.state.fetch(state);
-    assert.equal(
-      stateObj.authority.toBase58(),
-      provider.wallet.publicKey.toBase58(),
-    );
-    assert.equal(
-      stateObj.issueAuthority.toBase58(),
-      provider.wallet.publicKey.toBase58(),
-    );
-    assert.equal(stateObj.optionsAvailable.toNumber(), numTokens);
-    assert.equal(stateObj.optionExpiration.toNumber(), optionExpiration);
-    assert.equal(
-      stateObj.subscriptionPeriodEnd.toNumber(),
-      subscriptionPeriodEnd,
-    );
-    assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
-    assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
-    assert.equal(stateObj.baseMint.toBase58(), baseMint.toBase58());
-    assert.equal(stateObj.quoteMint.toBase58(), quoteMint.toBase58());
-    assert.equal(stateObj.quoteAccount.toBase58(), quoteAccount.toBase58());
-    assert.equal(stateObj.strikes.length, 0);
-    assert.equal(stateObj.lotSize, LOT_SIZE);
-    assert.equal(stateObj.soName, SO_NAME);
-
-    // Verify the tokens are stored.
-    const baseVaultAccount = await getAccount(provider.connection, baseVault);
-    assert.equal(Number(baseVaultAccount.amount), numTokens);
-  });
-
   it('Config Success', async () => {
     await configureSO();
 
@@ -354,7 +260,7 @@ describe('staking-options', () => {
       subscriptionPeriodEnd,
     );
     assert.equal(stateObj.baseDecimals, DEFAULT_MINT_DECIMALS);
-    assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
+    // assert.equal(stateObj.quoteDecimals, DEFAULT_MINT_DECIMALS);
     assert.equal(stateObj.baseMint.toBase58(), baseMint.toBase58());
     assert.equal(stateObj.quoteMint.toBase58(), quoteMint.toBase58());
     assert.equal(stateObj.quoteAccount.toBase58(), quoteAccount.toBase58());
@@ -507,4 +413,90 @@ describe('staking-options', () => {
     console.log('Verifying state removed');
     assert(await provider.connection.getAccountInfo(state) === null);
   });
+
+  it('E2E Reversible', async () => {
+    try {
+      await configureSO();
+      await initStrike(STRIKE);
+
+      await issue(OPTIONS_AMOUNT, STRIKE);
+
+      const reverseOptionMint = await so.reverseSoMint(STRIKE, SO_NAME, baseMint);
+
+      userQuoteAccount = await createTokenAccount(
+        provider,
+        quoteMint,
+        provider.wallet.publicKey,
+      );
+      await mintToAccount(
+        provider,
+        quoteMint,
+        userQuoteAccount,
+        new BN(OPTIONS_AMOUNT * STRIKE * DEFAULT_MINT_DECIMALS),
+        provider.wallet.publicKey,
+      );
+
+      userBaseAccount = await createTokenAccount(
+        provider,
+        baseMint,
+        provider.wallet.publicKey,
+      );
+
+      baseVault = await so.baseVault(SO_NAME, baseMint);
+      userReverseSoAccount = await createTokenAccount(
+        provider,
+        reverseOptionMint,
+        provider.wallet.publicKey,
+      );
+
+      // Wait for token accounts to all be initialized.
+      await new Promise((r) => setTimeout(r, 5_000));
+
+      const reversibleExerciseInstr = await so.createExerciseReversibleInstruction(
+        new BN(OPTIONS_AMOUNT / LOT_SIZE),
+        new BN(STRIKE),
+        SO_NAME,
+        provider.wallet.publicKey,
+        userSoAccount,
+        userReverseSoAccount,
+        userQuoteAccount,
+        userBaseAccount,
+      );
+
+      const exerciseTx = new Transaction();
+      exerciseTx.add(reversibleExerciseInstr);
+      await provider.sendAndConfirm(exerciseTx);
+
+      await new Promise((r) => setTimeout(r, 5_000));
+
+      const reverseExerciseInstr = await so.createReverseExerciseInstruction(
+        new BN(OPTIONS_AMOUNT / LOT_SIZE / 2),
+        new BN(STRIKE),
+        SO_NAME,
+        provider.wallet.publicKey,
+        userSoAccount,
+        userReverseSoAccount,
+        userQuoteAccount,
+        userBaseAccount,
+      );
+
+      const reverseTx = new Transaction();
+      reverseTx.add(reverseExerciseInstr);
+      await provider.sendAndConfirm(reverseTx);
+
+      await withdraw();
+
+      // Get back all the base tokens except the half of the tokens that were
+      // not reverse exercised.
+      assert.equal(
+        Number((await getAccount(provider.connection, baseAccount)).amount),
+        numTokens - OPTIONS_AMOUNT / 2,
+      );
+    } catch (err) {
+      console.log(err);
+      assert(false);
+    }
+  });
+
+  // TODO: Test fee exempt and reduced fee pairs
 });
