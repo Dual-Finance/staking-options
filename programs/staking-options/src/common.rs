@@ -4,6 +4,7 @@ pub const SO_CONFIG_SEED: &[u8] = b"so-config";
 pub const SO_VAULT_SEED: &[u8] = b"so-vault";
 pub const SO_REVERSE_VAULT_SEED: &[u8] = b"so-reverse-vault";
 pub const SO_MINT_SEED: &[u8] = b"so-mint";
+pub const DUAL_DAO_ADDRESS: &str = "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE";
 pub const SO_REVERSE_MINT_SEED: &[u8] = b"so-reverse-mint";
 
 #[account]
@@ -56,7 +57,6 @@ pub struct State {
     pub issue_authority: Pubkey,
 }
 
-pub const DUAL_DAO_ADDRESS: &str = "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE";
 const DUAL_RISK_MANAGER: &str = "CkcJx7Uwgxck5zm3DqUp2N1ikkkoPn2wA8zf7oS4tFSZ";
 
 const USDC: &str = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";

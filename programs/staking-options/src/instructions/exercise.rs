@@ -160,7 +160,7 @@ impl<'info> Exercise<'info> {
         // Verify that it is owned by DUAL.
         require_eq!(
             self.fee_quote_account.owner.key().to_string(),
-            "7Z36Efbt7a4nLiV7s5bY7J2e4TJ6V9JEKGccsy2od2bE"
+            DUAL_DAO_ADDRESS
         );
 
         // Verify expiration
