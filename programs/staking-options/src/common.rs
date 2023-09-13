@@ -130,7 +130,7 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
         return 25;
     }
     // Charge lower fee on major/major pairs
-    if (is_base_major && is_quote_major) {
+    if is_base_major && is_quote_major {
         return 5;
     }
 
