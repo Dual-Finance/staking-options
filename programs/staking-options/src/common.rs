@@ -66,6 +66,7 @@ const USDH: &str = "USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX";
 const CHAI: &str = "3jsFX1tx2Z8ewmamiwSU851GzyzM2DJMq7KWW5DM8Py3";
 
 const WBTCPO: &str = "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh";
+const TBTC: &str = "6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU";
 const WSTETHPO: &str = "ZScHuTtqZukUrtZS43teTKGs2VqkKL8k4QCouR2n6Uo";
 const WETHPO: &str = "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs";
 const WSOL: &str = "So11111111111111111111111111111111111111112";
@@ -108,6 +109,7 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
 
     let is_base_major = [
         WBTCPO.to_string(),
+        TBTC.to_string(),
         WETHPO.to_string(),
         WSTETHPO.to_string(),
         WSOL.to_string(),
@@ -116,6 +118,7 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
 
     let is_quote_major = [
         WBTCPO.to_string(),
+        TBTC.to_string(),
         WETHPO.to_string(),
         WSTETHPO.to_string(),
         WSOL.to_string(),
@@ -125,6 +128,10 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
     // Charge reduced fees on pairs of majors.
     if (is_base_major && is_quote_stable) || (is_quote_major && is_base_stable) {
         return 25;
+    }
+    // Charge lower fee on major/major pairs
+    if is_base_major && is_quote_major {
+        return 5;
     }
 
     return 350;
