@@ -97,6 +97,26 @@ pub mod staking_options {
         )
     }
 
+    // Same as config_v3 except uses lots to avoid client side issues.
+    #[access_control(ctx.accounts.validate_accounts(option_expiration, subscription_period_end))]
+    pub fn config_lots(
+        ctx: Context<ConfigV3>,
+        option_expiration: u64,
+        subscription_period_end: u64,
+        num_lots: u64,
+        lot_size: u64,
+        so_name: String,
+    ) -> Result<()> {
+        config::config_lots(
+            ctx,
+            option_expiration,
+            subscription_period_end,
+            num_lots,
+            lot_size,
+            so_name,
+        )
+    }
+
     #[access_control(ctx.accounts.validate_accounts(amount, strike))]
     pub fn exercise(ctx: Context<Exercise>, amount: u64, strike: u64) -> Result<()> {
         exercise::exercise(ctx, amount, strike)
