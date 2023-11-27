@@ -3,26 +3,6 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 pub use crate::*;
 
-// configLotsis same as v3 except it accepts lots instead of tokens. The purpose
-// is to avoid BN.js and number safe limit 53 bit limitation.
-pub fn config_lots(
-    ctx: Context<ConfigV3>,
-    option_expiration: u64,
-    subscription_period_end: u64,
-    num_lots: u64,
-    lot_size: u64,
-    so_name: String,
-) -> Result<()> {
-    config_v3(
-        ctx,
-        option_expiration,
-        subscription_period_end,
-        num_lots.checked_mul(lot_size).unwrap(),
-        lot_size,
-        so_name
-    )
-}
-
 // configV3 is same as v2 except it includes the reverse.
 pub fn config_v3(
     ctx: Context<ConfigV3>,

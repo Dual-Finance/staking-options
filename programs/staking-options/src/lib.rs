@@ -97,7 +97,8 @@ pub mod staking_options {
         )
     }
 
-    // Same as config_v3 except uses lots to avoid client side issues.
+    // configLotsis same as v3 except it accepts lots instead of tokens. The purpose
+    // is to avoid BN.js and number safe limit 53 bit limitation.
     #[access_control(ctx.accounts.validate_accounts(option_expiration, subscription_period_end))]
     pub fn config_lots(
         ctx: Context<ConfigV3>,
@@ -107,11 +108,11 @@ pub mod staking_options {
         lot_size: u64,
         so_name: String,
     ) -> Result<()> {
-        config::config_lots(
+        config::config_v3(
             ctx,
             option_expiration,
             subscription_period_end,
-            num_lots,
+            num_lots.checked_mul(lot_size).unwrap(),
             lot_size,
             so_name,
         )
