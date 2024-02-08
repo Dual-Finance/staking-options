@@ -132,19 +132,11 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
     ]
     .contains(&quote_mint.to_string());
 
-    let is_base_partner = [
-        MNGO.to_string(),
-        RAY.to_string(),
-        NOS.to_string(),
-    ]
-    .contains(&base_mint.to_string());
+    let is_base_partner =
+        [MNGO.to_string(), RAY.to_string(), NOS.to_string()].contains(&base_mint.to_string());
 
-    let is_quote_partner = [
-        MNGO.to_string(),
-        RAY.to_string(),
-        NOS.to_string(),
-    ]
-    .contains(&quote_mint.to_string());
+    let is_quote_partner =
+        [MNGO.to_string(), RAY.to_string(), NOS.to_string()].contains(&quote_mint.to_string());
 
     // Charge reduced fees on pairs of majors.
     if (is_base_major && is_quote_stable) || (is_quote_major && is_base_stable) {
