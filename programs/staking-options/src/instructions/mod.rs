@@ -7,7 +7,6 @@ pub mod name_token;
 pub mod withdraw;
 
 pub use add_tokens::*;
-pub use add_tokens::*;
 pub use config::*;
 pub use exercise::*;
 pub use init_strike::*;
