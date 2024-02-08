@@ -72,6 +72,10 @@ const RETHPO: &str = "9UV2pC1qPaVMfRv8CF7qhv7ihbzR91pr2LX9y2FDfGLy";
 const WETHPO: &str = "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs";
 const WSOL: &str = "So11111111111111111111111111111111111111112";
 
+const MNGO: &str = "MangoCzJ36AjZyKwVj3VnYU4GTonjfVEnJmvvWaxLac";
+const RAY: &str = "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R";
+const NOS: &str = "nosXBVoaCTtYdLvKY6Csb4AC8JCdQKKAaWYtx2ZMoo7";
+
 pub fn is_fee_exempt(user_quote_account_owner: Pubkey) -> bool {
     // Do not charge fee when the DUAL DAO is exercising since that is the recipient of the fee.
     if user_quote_account_owner.to_string() == DUAL_DAO_ADDRESS {
@@ -128,9 +132,27 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
     ]
     .contains(&quote_mint.to_string());
 
+    let is_base_partner = [
+        MNGO.to_string(),
+        RAY.to_string(),
+        NOS.to_string(),
+    ]
+    .contains(&base_mint.to_string());
+
+    let is_quote_partner = [
+        MNGO.to_string(),
+        RAY.to_string(),
+        NOS.to_string(),
+    ]
+    .contains(&quote_mint.to_string());
+
     // Charge reduced fees on pairs of majors.
     if (is_base_major && is_quote_stable) || (is_quote_major && is_base_stable) {
         return 25;
+    }
+    // Charge reduced fees to partners.
+    if (is_base_partner && is_quote_stable) || (is_quote_partner && is_base_stable) {
+        return 50;
     }
     // Charge lower fee on major/major pairs
     if is_base_major && is_quote_major {
