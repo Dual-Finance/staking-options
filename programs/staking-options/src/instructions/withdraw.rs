@@ -30,10 +30,6 @@ pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
             ),
             ctx.accounts.base_vault.amount,
         )?;
-        // Conditionally close the SOState if it is the final withdraw.
-        ctx.accounts
-            .state
-            .close(ctx.accounts.authority.to_account_info())?;
     } else {
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
