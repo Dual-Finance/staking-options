@@ -112,6 +112,8 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey, name: String) -> u64 {
     // were to abuse that, we will address later in future versions.
     let is_mm_deal = name.to_lowercase().contains("mm") || name.to_lowercase().contains("loan");
 
+    let is_otc = name.to_lowercase().contains("otc");
+
     let is_base_major = [
         WBTCPO.to_string(),
         TBTC.to_string(),
@@ -147,12 +149,16 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey, name: String) -> u64 {
 
     // Reduced fee on mm tokens
     if is_mm_deal {
+        fee_bps = cmp::min(fee_bps, 25);
+    }
+
+    if is_otc{
         fee_bps = cmp::min(fee_bps, 10);
     }
 
     // Charge reduced fees on pairs of majors.
     if (is_base_major && is_quote_stable) || (is_quote_major && is_base_stable) {
-        fee_bps = cmp::min(fee_bps, 25);
+        fee_bps = cmp::min(fee_bps, 10);
     }
     // Charge reduced fees to partners.
     if (is_base_partner && is_quote_stable) || (is_quote_partner && is_base_stable) {
