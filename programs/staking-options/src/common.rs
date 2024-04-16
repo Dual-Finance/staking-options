@@ -152,7 +152,7 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey, name: String) -> u64 {
         fee_bps = cmp::min(fee_bps, 25);
     }
 
-    if is_otc{
+    if is_otc {
         fee_bps = cmp::min(fee_bps, 10);
     }
 
