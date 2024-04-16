@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use std::cmp;
 
 pub const SO_CONFIG_SEED: &[u8] = b"so-config";
 pub const SO_VAULT_SEED: &[u8] = b"so-vault";
@@ -89,7 +90,7 @@ pub fn is_fee_exempt(user_quote_account_owner: Pubkey) -> bool {
     return false;
 }
 
-pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
+pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey, name: String) -> u64 {
     let is_base_stable = [
         USDC.to_string(),
         USDT.to_string(),
@@ -106,11 +107,10 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
         CHAI.to_string(),
     ]
     .contains(&quote_mint.to_string());
-
-    // Reduced fee on stables
-    if is_base_stable && is_quote_stable {
-        return 5;
-    }
+    
+    // Hack for MM deals. Name is a user generated field, but if another user
+    // were to abuse that, we will address later in future versions.
+    let is_mm_deal = name.to_lowercase().contains("mm") || name.to_lowercase().contains("loan");
 
     let is_base_major = [
         WBTCPO.to_string(),
@@ -138,18 +138,30 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
     let is_quote_partner =
         [MNGO.to_string(), RAY.to_string(), NOS.to_string()].contains(&quote_mint.to_string());
 
+    let mut fee_bps = 350;
+
+    // Reduced fee on stables
+    if is_base_stable && is_quote_stable {
+        fee_bps = cmp::min(fee_bps, 5);
+    }
+
+    // Reduced fee on mm tokens
+    if is_mm_deal {
+        fee_bps = cmp::min(fee_bps, 10);
+    }
+
     // Charge reduced fees on pairs of majors.
     if (is_base_major && is_quote_stable) || (is_quote_major && is_base_stable) {
-        return 25;
+        fee_bps = cmp::min(fee_bps, 25);
     }
     // Charge reduced fees to partners.
     if (is_base_partner && is_quote_stable) || (is_quote_partner && is_base_stable) {
-        return 50;
+        fee_bps = cmp::min(fee_bps, 25);
     }
     // Charge lower fee on major/major pairs
     if is_base_major && is_quote_major {
-        return 5;
+        fee_bps = cmp::min(fee_bps, 5);
     }
 
-    return 350;
+    return fee_bps;
 }
