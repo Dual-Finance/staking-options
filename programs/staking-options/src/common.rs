@@ -107,7 +107,7 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey, name: String) -> u64 {
         CHAI.to_string(),
     ]
     .contains(&quote_mint.to_string());
-    
+
     // Hack for MM deals. Name is a user generated field, but if another user
     // were to abuse that, we will address later in future versions.
     let is_mm_deal = name.to_lowercase().contains("mm") || name.to_lowercase().contains("loan");
