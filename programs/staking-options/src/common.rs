@@ -64,6 +64,7 @@ const USDT: &str = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const DAIPO: &str = "EjmyN6qEC1Tf1JxiG1ae7UTJhUxSwk1TCWNWqxWV4J6o";
 const USDH: &str = "USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX";
 const CHAI: &str = "3jsFX1tx2Z8ewmamiwSU851GzyzM2DJMq7KWW5DM8Py3";
+const USDY: &str = "A1KLoBrKBde8Ty9qtNQUtq3C2ortoC3u7twggz7sEto6";
 
 const WBTCPO: &str = "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh";
 const TBTC: &str = "6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU";
@@ -96,6 +97,7 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
         DAIPO.to_string(),
         USDH.to_string(),
         CHAI.to_string(),
+        USDY.to_string(),
     ]
     .contains(&base_mint.to_string());
     let is_quote_stable = [
@@ -104,6 +106,7 @@ pub fn get_fee_bps(base_mint: Pubkey, quote_mint: Pubkey) -> u64 {
         DAIPO.to_string(),
         USDH.to_string(),
         CHAI.to_string(),
+        USDY.to_string(),
     ]
     .contains(&quote_mint.to_string());
 
