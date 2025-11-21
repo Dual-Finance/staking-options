@@ -9,7 +9,7 @@ jobs:
     container: projectserum/build:v0.26.0
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: List rustup toolchains
         run: rustup toolchain list
