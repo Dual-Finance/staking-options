@@ -1,9 +1,12 @@
-use anchor_spl::token::{TokenAccount, Mint};
+use anchor_spl::token::{Mint, TokenAccount};
 
 pub use crate::common::*;
 pub use crate::*;
 
-pub fn modify_expiration(ctx: Context<ModifyExpiration>, new_expiration_unix_sec: u64) -> Result<()> {
+pub fn modify_expiration(
+    ctx: Context<ModifyExpiration>,
+    new_expiration_unix_sec: u64,
+) -> Result<()> {
     // Only allow accelerating expiration.
     assert!(ctx.accounts.state.option_expiration > new_expiration_unix_sec);
 

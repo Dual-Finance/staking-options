@@ -151,7 +151,10 @@ pub mod staking_options {
     }
 
     // Access control checked in the handler.
-    pub fn modify_expiration(ctx: Context<ModifyExpiration>, new_expiration_unix_sec: u64) -> Result<()> {
+    pub fn modify_expiration(
+        ctx: Context<ModifyExpiration>,
+        new_expiration_unix_sec: u64,
+    ) -> Result<()> {
         modify_expiration::modify_expiration(ctx, new_expiration_unix_sec)
     }
 }
