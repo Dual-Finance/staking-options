@@ -8,7 +8,7 @@ pub fn modify_expiration(
     new_expiration_unix_sec: u64,
 ) -> Result<()> {
     // Only allow accelerating expiration.
-    assert!(ctx.accounts.state.option_expiration > new_expiration_unix_sec);
+    assert!(ctx.accounts.state.option_expiration >= new_expiration_unix_sec);
 
     // Require that the authority holds all the outstanding options and no more are issued.
 
@@ -18,6 +18,9 @@ pub fn modify_expiration(
     assert!(ctx.accounts.user_so_account.amount == ctx.accounts.option_mint.supply);
 
     ctx.accounts.state.option_expiration = new_expiration_unix_sec;
+    if ctx.accounts.state.subscription_period_end > new_expiration_unix_sec {
+        ctx.accounts.state.subscription_period_end = new_expiration_unix_sec;
+    }
 
     Ok(())
 }
