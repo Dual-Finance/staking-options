@@ -150,7 +150,7 @@ pub mod staking_options {
         withdraw::withdraw_all(ctx)
     }
 
-    // Access control checked in the handler.
+    #[access_control(ctx.accounts.validate_accounts())]
     pub fn modify_expiration(
         ctx: Context<ModifyExpiration>,
         new_expiration_unix_sec: u64,
