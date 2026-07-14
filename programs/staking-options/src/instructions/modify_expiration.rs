@@ -12,6 +12,8 @@ pub fn modify_expiration(
         ctx.accounts.state.strikes.len() == 1,
         SOErrorCode::TooManyStrikes
     );
+    // Only allow accelerating expiration.
+    assert!(ctx.accounts.state.option_expiration >= new_expiration_unix_sec);
 
     // Verify the option mint is the real SO mint for this state's single strike.
     // Without this, a decoy zero-supply mint (and a matching empty token
