@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)]
+
 use anchor_lang::prelude::*;
 
 #[macro_use]
@@ -7,7 +9,6 @@ mod common;
 mod errors;
 mod instructions;
 
-pub use crate::common::*;
 pub use crate::errors::SOErrorCode;
 pub use crate::instructions::*;
 
